@@ -1,0 +1,34 @@
+export interface Artist {
+	mbid: string;
+	name: string;
+	genre: string;
+	country: string;
+	totalPlays: number;
+	listenerCount: number;
+	/** Tailwind gradient classes for the artwork placeholder */
+	gradient: string;
+	similarMbids: string[];
+}
+
+export interface UserTopArtist {
+	artist: Artist;
+	plays: number;
+}
+
+export interface User {
+	id: string;
+	sha1: string;
+	displayName: string;
+	topArtists: UserTopArtist[];
+}
+
+export interface Recommendation {
+	artist: Artist;
+	score: number;
+	reason: string;
+}
+
+export interface UserRecommendations {
+	userId: string;
+	items: Recommendation[];
+}
