@@ -9,6 +9,11 @@ dependencies = [
     "matplotlib>=3.7",
     "seaborn>=0.12",
     "jupyter>=1.0",
+    "torch>=2.0",
+    "scipy>=1.11",
+    "tqdm>=4.65",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
 ]
 
 [build-system]
