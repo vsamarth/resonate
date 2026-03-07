@@ -20,12 +20,14 @@ export interface User {
 	sha1: string;
 	displayName: string;
 	topArtists: UserTopArtist[];
+	/** Integer index into the LightGCN embedding matrix (0 … n_users-1) */
+	userIdx: number;
 }
 
 export interface Recommendation {
 	artist: Artist;
 	score: number;
-	reason: string;
+	reason?: string;
 }
 
 export interface UserRecommendations {

@@ -12,6 +12,7 @@ export const users: User[] = [
 		id: '0',
 		sha1: '00000c28',
 		displayName: 'User #0',
+		userIdx: 0,
 		topArtists: [
 			{ artist: betty, plays: 2137 },
 			{ artist: dieArzte, plays: 1099 },
@@ -27,6 +28,7 @@ export const users: User[] = [
 		id: '1',
 		sha1: '1a2b3c4d',
 		displayName: 'User #1',
+		userIdx: 1,
 		topArtists: [
 			{ artist: nirvana, plays: 3412 },
 			{ artist: radiohead, plays: 2891 },
@@ -42,6 +44,7 @@ export const users: User[] = [
 		id: '2',
 		sha1: '2c3d4e5f',
 		displayName: 'User #2',
+		userIdx: 2,
 		topArtists: [
 			{ artist: metallica, plays: 4210 },
 			{ artist: misfits, plays: 3180 },
@@ -57,6 +60,7 @@ export const users: User[] = [
 		id: '3',
 		sha1: '3e4f5a6b',
 		displayName: 'User #3',
+		userIdx: 3,
 		topArtists: [
 			{ artist: daftPunk, plays: 5120 },
 			{ artist: coldplay, plays: 3940 },
@@ -72,6 +76,7 @@ export const users: User[] = [
 		id: '4',
 		sha1: '4f5a6b7c',
 		displayName: 'User #4',
+		userIdx: 4,
 		topArtists: [
 			{ artist: redHot, plays: 3890 },
 			{ artist: arctic, plays: 3120 },
