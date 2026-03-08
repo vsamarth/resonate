@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { getRecommendationsForUser } from '$lib/data/recommendations';
+	import { fetchRecommendations } from '$lib/api/recommendations';
+	import type { Recommendation } from '$lib/types';
 	import ArtistRow from '$lib/components/ArtistRow.svelte';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import { ArrowLeft, Music2 } from 'lucide-svelte';
@@ -12,7 +13,18 @@
 	let { data }: Props = $props();
 	const user = $derived(data.user);
 
-	const recs = $derived(getRecommendationsForUser(user.id));
+	let recs = $state<Recommendation[]>([]);
+	let recsLoading = $state(true);
+
+	$effect(() => {
+		const userIdx = user.userIdx;
+		recsLoading = true;
+		fetchRecommendations(userIdx, 10).then((items) => {
+			recs = items;
+			recsLoading = false;
+		});
+	});
+
 	const maxPlays = $derived(user.topArtists[0]?.plays ?? 1);
 
 	function formatPlays(n: number): string {
@@ -125,11 +137,15 @@
 	</section>
 
 	<!-- Recommendations -->
-	{#if recs && recs.items.length > 0}
+	{#if recsLoading}
+		<div class="mb-10">
+			<p class="text-sm text-text-secondary animate-pulse">Loading recommendations…</p>
+		</div>
+	{:else if recs.length > 0}
 		<ArtistRow
 			title="Made For You"
-			subtitle="Top picks from the recommendation model"
-			items={recs.items}
+			subtitle="Top picks from the LightGCN model"
+			items={recs}
 			showScore={true}
 			cardSize="md"
 		/>

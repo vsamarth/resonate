@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { activeUser } from '$lib/stores';
-	import { getRecommendationsForUser } from '$lib/data/recommendations';
+	import { fetchRecommendations } from '$lib/api/recommendations';
 	import { trendingArtists } from '$lib/data/artists';
+	import type { Recommendation } from '$lib/types';
 	import ArtistRow from '$lib/components/ArtistRow.svelte';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
 
@@ -13,7 +14,18 @@
 	}
 
 	const topArtists = $derived($activeUser.topArtists.map((ta) => ta.artist));
-	const recs = $derived(getRecommendationsForUser($activeUser.id));
+
+	let recs = $state<Recommendation[]>([]);
+	let recsLoading = $state(true);
+
+	$effect(() => {
+		const userIdx = $activeUser.userIdx;
+		recsLoading = true;
+		fetchRecommendations(userIdx, 10).then((items) => {
+			recs = items;
+			recsLoading = false;
+		});
+	});
 </script>
 
 <div class="min-h-screen px-8 py-10">
@@ -36,11 +48,15 @@
 	/>
 
 	<!-- Made For You -->
-	{#if recs && recs.items.length > 0}
+	{#if recsLoading}
+		<div class="mb-10">
+			<p class="text-sm text-text-secondary animate-pulse">Loading recommendations…</p>
+		</div>
+	{:else if recs.length > 0}
 		<ArtistRow
 			title="Made For You"
-			subtitle="Personalized picks from the recommendation model"
-			items={recs.items}
+			subtitle="Personalized picks from the LightGCN model"
+			items={recs}
 			showScore={true}
 			seeAllHref="/user/{$activeUser.id}"
 			cardSize="md"
