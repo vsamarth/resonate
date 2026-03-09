@@ -2,10 +2,19 @@
 	interface Props {
 		score: number;
 		maxScore?: number;
+		/** When set, bar uses min–max normalization: (score - minScore) / (maxScore - minScore) */
+		minScore?: number;
 	}
-	let { score, maxScore = 8 }: Props = $props();
+	let { score, maxScore = 8, minScore }: Props = $props();
 
-	const pct = $derived(Math.min((score / maxScore) * 100, 100));
+	const pct = $derived.by(() => {
+		if (minScore !== undefined && maxScore !== undefined) {
+			const range = maxScore - minScore;
+			if (range <= 0) return 100;
+			return Math.min(Math.max(((score - minScore) / range) * 100, 0), 100);
+		}
+		return Math.min((score / maxScore) * 100, 100);
+	});
 </script>
 
 <div class="mt-1.5 flex items-center gap-2">
