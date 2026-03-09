@@ -5,7 +5,7 @@
 	import ArtistRow from '$lib/components/ArtistRow.svelte';
 	import ArtistImage from '$lib/components/ArtistImage.svelte';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
-	import { ArrowLeft, Users, Play, Calendar, Tag } from 'lucide-svelte';
+	import { ArrowLeft, Users, Play, Calendar, MapPin } from 'lucide-svelte';
 
 	interface Props {
 		data: PageData;
@@ -19,15 +19,21 @@
 	const mbTags = $derived(data.mbTags ?? []);
 	const mbFormed = $derived(data.mbFormed);
 	const mbType = $derived(data.mbType);
+	const modelSimilar = $derived(data.modelSimilar ?? []);
 
-	const similar = $derived(getSimilarArtists(artist.mbid));
+	// Model similar artists take priority; fall back to static catalog similarMbids
+	const staticSimilar = $derived(getSimilarArtists(artist.mbid));
+	const similarArtists = $derived(modelSimilar.length > 0 ? modelSimilar : staticSimilar);
+
 	const topListeners = $derived(getTopListenersForArtist(artist.mbid));
 
-	// Show the top 6 genre tags from MusicBrainz, fallback to local genre
+	// Top tags: prefer MusicBrainz tags, fall back to local genre (only if non-empty)
 	const displayTags = $derived(
 		mbTags.length > 0
-			? mbTags.slice(0, 6).map((t) => t.name)
-			: [artist.genre]
+			? mbTags.slice(0, 4).map((t) => t.name)
+			: artist.genre
+				? [artist.genre]
+				: []
 	);
 
 	function formatPlays(n: number): string {
@@ -35,6 +41,17 @@
 		if (n >= 1_000) return (n / 1_000).toFixed(0) + 'K';
 		return n.toString();
 	}
+
+	// Country → flag emoji
+	function countryFlag(code: string): string {
+		if (!code || code.length !== 2) return '';
+		return String.fromCodePoint(
+			...code.toUpperCase().split('').map((c) => 0x1f1e0 + c.charCodeAt(0) - 65)
+		);
+	}
+
+	const flag = $derived(countryFlag(artist.country));
+	const countryDisplay = $derived(flag ? `${flag} ${artist.country}` : artist.country);
 </script>
 
 <div class="min-h-screen">
@@ -61,39 +78,45 @@
 
 		<!-- Artist identity -->
 		<div class="absolute bottom-6 left-8 right-8">
-			<!-- Genre/type tags from MusicBrainz -->
-			<div class="mb-2 flex flex-wrap items-center gap-2">
-				{#each displayTags.slice(0, 4) as tag}
-					<span class="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium text-white backdrop-blur-sm capitalize">
-						{tag}
-					</span>
-				{/each}
-				{#if mbType}
-					<span class="rounded-full border border-white/20 px-2.5 py-0.5 text-xs font-medium text-white/70">
-						{mbType}
-					</span>
-				{/if}
-			</div>
+			<!-- Tags from MusicBrainz (or fallback genre) -->
+			{#if displayTags.length > 0 || mbType}
+				<div class="mb-2 flex flex-wrap items-center gap-2">
+					{#each displayTags as tag}
+						<span class="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium text-white backdrop-blur-sm capitalize">
+							{tag}
+						</span>
+					{/each}
+					{#if mbType}
+						<span class="rounded-full border border-white/20 px-2.5 py-0.5 text-xs font-medium text-white/70">
+							{mbType}
+						</span>
+					{/if}
+				</div>
+			{/if}
 			<h1 class="text-5xl font-bold text-white drop-shadow-lg">{artist.name}</h1>
 		</div>
 	</div>
 
-	<!-- Stats bar -->
+	<!-- Stats bar — only show stats with real data -->
 	<div class="flex flex-wrap gap-6 border-b border-white/5 bg-base-card px-8 py-4">
-		<div class="flex items-center gap-2">
-			<Play class="h-4 w-4 text-accent" />
-			<div>
-				<p class="text-xs text-text-secondary">Total Plays</p>
-				<p class="text-sm font-semibold text-white">{formatPlays(artist.totalPlays)}</p>
+		{#if artist.totalPlays > 0}
+			<div class="flex items-center gap-2">
+				<Play class="h-4 w-4 text-accent" />
+				<div>
+					<p class="text-xs text-text-secondary">Total Plays</p>
+					<p class="text-sm font-semibold text-white">{formatPlays(artist.totalPlays)}</p>
+				</div>
 			</div>
-		</div>
-		<div class="flex items-center gap-2">
-			<Users class="h-4 w-4 text-accent" />
-			<div>
-				<p class="text-xs text-text-secondary">Listeners</p>
-				<p class="text-sm font-semibold text-white">{artist.listenerCount}</p>
+		{/if}
+		{#if artist.listenerCount > 0}
+			<div class="flex items-center gap-2">
+				<Users class="h-4 w-4 text-accent" />
+				<div>
+					<p class="text-xs text-text-secondary">Listeners</p>
+					<p class="text-sm font-semibold text-white">{artist.listenerCount.toLocaleString()}</p>
+				</div>
 			</div>
-		</div>
+		{/if}
 		{#if mbFormed}
 			<div class="flex items-center gap-2">
 				<Calendar class="h-4 w-4 text-accent" />
@@ -105,10 +128,10 @@
 		{/if}
 		{#if artist.country}
 			<div class="flex items-center gap-2">
-				<Tag class="h-4 w-4 text-accent" />
+				<MapPin class="h-4 w-4 text-accent" />
 				<div>
 					<p class="text-xs text-text-secondary">Country</p>
-					<p class="text-sm font-semibold text-white">{artist.country}</p>
+					<p class="text-sm font-semibold text-white">{countryDisplay}</p>
 				</div>
 			</div>
 		{/if}
@@ -155,17 +178,19 @@
 			</section>
 		{/if}
 
-		<!-- Similar artists -->
-		{#if similar.length > 0}
+		<!-- Similar artists: model embedding neighbours, fallback to static catalog -->
+		{#if similarArtists.length > 0}
 			<ArtistRow
 				title="Listeners Also Like"
-				subtitle="Nearest neighbours in embedding space"
-				items={similar}
+				subtitle={modelSimilar.length > 0
+					? 'Nearest neighbours in LightGCN embedding space'
+					: 'Similar artists'}
+				items={similarArtists}
 				cardSize="sm"
 			/>
 		{/if}
 
-		<!-- Top Listeners -->
+		<!-- Top Listeners (demo users only) -->
 		{#if topListeners.length > 0}
 			<section>
 				<h2 class="mb-4 text-xl font-semibold text-white">Top Listeners</h2>
