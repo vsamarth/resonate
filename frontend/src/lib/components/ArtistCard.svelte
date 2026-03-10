@@ -8,6 +8,9 @@
 		score?: number;
 		reason?: string;
 		showScore?: boolean;
+		showCategory?: boolean;
+		scoreMin?: number;
+		scoreMax?: number;
 		size?: 'sm' | 'md' | 'lg';
 	}
 
@@ -16,6 +19,9 @@
 		score,
 		reason,
 		showScore = false,
+		showCategory = true,
+		scoreMin,
+		scoreMax,
 		size = 'md'
 	}: Props = $props();
 
@@ -42,13 +48,15 @@
 	<!-- Info -->
 	<div class="mt-2 px-0.5">
 		<p class="truncate text-sm font-medium text-white leading-tight">{artist.name}</p>
-		{#if reason}
-			<p class="mt-0.5 truncate text-xs text-text-secondary">{reason}</p>
-		{:else}
-			<p class="mt-0.5 text-xs text-text-secondary">{artist.genre}</p>
+		{#if showCategory}
+			{#if reason}
+				<p class="mt-0.5 truncate text-xs text-text-secondary">{reason}</p>
+			{:else}
+				<p class="mt-0.5 text-xs text-text-secondary">{artist.genre}</p>
+			{/if}
 		{/if}
 		{#if showScore && score !== undefined}
-			<ScoreBar {score} />
+			<ScoreBar {score} minScore={scoreMin} maxScore={scoreMax} />
 		{/if}
 	</div>
 </a>

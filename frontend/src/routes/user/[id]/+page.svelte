@@ -15,6 +15,7 @@
 
 	let recs = $state<Recommendation[]>([]);
 	let recsLoading = $state(true);
+	const recScoreMax = $derived(recs.length ? Math.max(...recs.map((r) => r.score)) : undefined);
 
 	$effect(() => {
 		const userIdx = user.userIdx;
@@ -147,6 +148,7 @@
 			subtitle="Top picks from the LightGCN model"
 			items={recs}
 			showScore={true}
+			scoreMax={recScoreMax}
 			cardSize="md"
 		/>
 	{/if}

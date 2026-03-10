@@ -7,6 +7,10 @@
 		subtitle?: string;
 		items: Artist[] | Recommendation[];
 		showScore?: boolean;
+		showCategory?: boolean;
+		/** Min/max scores for normalizing the bar (e.g. from the current list). */
+		scoreMin?: number;
+		scoreMax?: number;
 		seeAllHref?: string;
 		cardSize?: 'sm' | 'md' | 'lg';
 	}
@@ -16,6 +20,9 @@
 		subtitle,
 		items,
 		showScore = false,
+		showCategory = true,
+		scoreMin,
+		scoreMax,
 		seeAllHref,
 		cardSize = 'md'
 	}: Props = $props();
@@ -53,6 +60,9 @@
 					score={item.score}
 					reason={item.reason}
 					showScore={showScore}
+					showCategory={showCategory}
+					scoreMin={scoreMin}
+					scoreMax={scoreMax}
 					size={cardSize}
 				/>
 			{:else}
