@@ -1,7 +1,5 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { fetchRecommendations } from '$lib/api/recommendations';
-	import type { Recommendation } from '$lib/types';
 	import ArtistRow from '$lib/components/ArtistRow.svelte';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import { ArrowLeft, Music2 } from 'lucide-svelte';
@@ -12,19 +10,8 @@
 
 	let { data }: Props = $props();
 	const user = $derived(data.user);
-
-	let recs = $state<Recommendation[]>([]);
-	let recsLoading = $state(true);
+	const recs = $derived(data.recommendations);
 	const recScoreMax = $derived(recs.length ? Math.max(...recs.map((r) => r.score)) : undefined);
-
-	$effect(() => {
-		const userIdx = user.userIdx;
-		recsLoading = true;
-		fetchRecommendations(userIdx, 10).then((items) => {
-			recs = items;
-			recsLoading = false;
-		});
-	});
 
 	const maxPlays = $derived(user.topArtists[0]?.plays ?? 1);
 
@@ -138,11 +125,7 @@
 	</section>
 
 	<!-- Recommendations -->
-	{#if recsLoading}
-		<div class="mb-10">
-			<p class="text-sm text-text-secondary animate-pulse">Loading recommendations…</p>
-		</div>
-	{:else if recs.length > 0}
+	{#if recs.length > 0}
 		<ArtistRow
 			title="Made For You"
 			subtitle="Top picks from the LightGCN model"

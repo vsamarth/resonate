@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { getSimilarArtists } from '$lib/data/artists';
-	import { getTopListenersForArtist } from '$lib/data/users';
 	import ArtistRow from '$lib/components/ArtistRow.svelte';
 	import ArtistImage from '$lib/components/ArtistImage.svelte';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
@@ -25,7 +24,7 @@
 	const staticSimilar = $derived(getSimilarArtists(artist.mbid));
 	const similarArtists = $derived(modelSimilar.length > 0 ? modelSimilar : staticSimilar);
 
-	const topListeners = $derived(getTopListenersForArtist(artist.mbid));
+	const topListeners = $derived(data.topListeners ?? []);
 
 	// Top tags: prefer MusicBrainz tags, fall back to local genre (only if non-empty)
 	const displayTags = $derived(
