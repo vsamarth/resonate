@@ -1,7 +1,8 @@
 import type { Artist, Recommendation } from '$lib/types';
 import { artists as staticArtists } from '$lib/data/artists';
 
-const BASE = 'http://localhost:8000';
+// Same-origin API routes — no need for an external backend.
+const BASE = '/api';
 
 // Gradient palette — cycled for artists not in the static catalog
 const GRADIENTS = [
