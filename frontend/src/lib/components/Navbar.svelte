@@ -1,9 +1,15 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { activeUser } from '$lib/stores';
-	import { users } from '$lib/data/users';
+	import type { User, ListUser } from '$lib/types';
 	import UserAvatar from './UserAvatar.svelte';
 	import { Home, Search, Music2, ChevronDown, Check } from 'lucide-svelte';
+
+	interface Props {
+		users: ListUser[];
+	}
+
+	let { users }: Props = $props();
 
 	let userMenuOpen = $state(false);
 	let scrolled = $state(false);
@@ -28,6 +34,17 @@
 			userMenuOpen = false;
 		}
 	}
+
+	async function selectUser(user: ListUser) {
+		const res = await fetch(`/api/users/${user.userIdx}`);
+		if (!res.ok) return;
+		const fullUser: User = await res.json();
+		activeUser.set(fullUser);
+		userMenuOpen = false;
+	}
+
+	// ListUser has displayName, sha1; UserAvatar only needs those (+ topArtists for type)
+	const toUserLike = (u: ListUser): User => ({ ...u, topArtists: [] });
 </script>
 
 <svelte:window onclick={handleOutsideClick} onscroll={onScroll} />
@@ -71,10 +88,17 @@
 				onclick={(e) => { e.stopPropagation(); userMenuOpen = !userMenuOpen; }}
 			>
 				<span class="hidden text-xs text-text-secondary sm:block">Listening as</span>
-				<UserAvatar user={$activeUser} size="sm" />
-				<div class="hidden min-w-0 text-left sm:block">
-					<p class="text-sm font-medium leading-tight text-white">{$activeUser.displayName}</p>
-				</div>
+				{#if $activeUser}
+					<UserAvatar user={$activeUser} size="sm" />
+					<div class="hidden min-w-0 text-left sm:block">
+						<p class="text-sm font-medium leading-tight text-white">{$activeUser.displayName}</p>
+					</div>
+				{:else}
+					<div class="h-8 w-8 rounded-full bg-white/10 shrink-0" />
+					<div class="hidden sm:block">
+						<p class="text-sm text-text-secondary">Loading…</p>
+					</div>
+				{/if}
 				<ChevronDown
 					class="h-3.5 w-3.5 shrink-0 text-text-secondary transition-transform {userMenuOpen ? 'rotate-180' : ''}"
 				/>
@@ -87,21 +111,18 @@
 					<div class="border-b border-white/5 px-3 py-2">
 						<p class="text-xs font-medium uppercase tracking-wider text-text-tertiary">Switch user</p>
 					</div>
-					<div class="p-1">
+					<div class="p-1 max-h-72 overflow-y-auto">
 						{#each users as user}
 							<button
 								class="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-white/5"
-								onclick={() => {
-									activeUser.set(user);
-									userMenuOpen = false;
-								}}
+								onclick={() => selectUser(user)}
 							>
-								<UserAvatar {user} size="sm" />
+								<UserAvatar user={toUserLike(user)} size="sm" />
 								<div class="min-w-0 flex-1">
 									<p class="text-sm font-medium text-white">{user.displayName}</p>
-									<p class="truncate text-xs text-text-secondary">{user.topArtists[0]?.artist.name}</p>
+									<p class="truncate text-xs text-text-secondary">sha1: {user.sha1}…</p>
 								</div>
-								{#if $activeUser.id === user.id}
+								{#if $activeUser?.id === user.id}
 									<Check class="h-3.5 w-3.5 shrink-0 text-accent" />
 								{/if}
 							</button>

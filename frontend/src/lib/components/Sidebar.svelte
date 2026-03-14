@@ -1,9 +1,15 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { activeUser } from '$lib/stores';
-	import { users } from '$lib/data/users';
+	import type { User, ListUser } from '$lib/types';
 	import UserAvatar from './UserAvatar.svelte';
 	import { Home, Search, Music2, ChevronDown } from 'lucide-svelte';
+
+	interface Props {
+		users: ListUser[];
+	}
+
+	let { users }: Props = $props();
 
 	let userMenuOpen = $state(false);
 
@@ -16,6 +22,16 @@
 		if (href === '/') return $page.url.pathname === '/';
 		return $page.url.pathname.startsWith(href);
 	}
+
+	async function selectUser(user: ListUser) {
+		const res = await fetch(`/api/users/${user.userIdx}`);
+		if (!res.ok) return;
+		const fullUser: User = await res.json();
+		activeUser.set(fullUser);
+		userMenuOpen = false;
+	}
+
+	const toUserLike = (u: ListUser): User => ({ ...u, topArtists: [] });
 </script>
 
 <aside
@@ -58,31 +74,33 @@
 			class="flex w-full items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-white/5"
 			onclick={() => (userMenuOpen = !userMenuOpen)}
 		>
-			<UserAvatar user={$activeUser} size="sm" />
-			<div class="min-w-0 flex-1 text-left">
-				<p class="truncate text-sm font-medium text-white">{$activeUser.displayName}</p>
-				<p class="text-xs text-text-secondary">sha1: {$activeUser.sha1}…</p>
-			</div>
+			{#if $activeUser}
+				<UserAvatar user={$activeUser} size="sm" />
+				<div class="min-w-0 flex-1 text-left">
+					<p class="truncate text-sm font-medium text-white">{$activeUser.displayName}</p>
+					<p class="text-xs text-text-secondary">sha1: {$activeUser.sha1}…</p>
+				</div>
+			{:else}
+				<div class="h-8 w-8 rounded-full bg-white/10 shrink-0" />
+				<p class="text-sm text-text-secondary">Loading…</p>
+			{/if}
 			<ChevronDown
 				class="h-4 w-4 shrink-0 text-text-secondary transition-transform {userMenuOpen ? 'rotate-180' : ''}"
 			/>
 		</button>
 
 		{#if userMenuOpen}
-			<div class="mt-1 flex flex-col gap-0.5 rounded-xl bg-base-surface p-1">
+			<div class="mt-1 flex flex-col gap-0.5 rounded-xl bg-base-surface p-1 max-h-48 overflow-y-auto">
 				{#each users as user}
 					<button
 						class="flex items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors hover:bg-white/5
-							{$activeUser.id === user.id ? 'bg-white/10' : ''}"
-						onclick={() => {
-							activeUser.set(user);
-							userMenuOpen = false;
-						}}
+							{$activeUser?.id === user.id ? 'bg-white/10' : ''}"
+						onclick={() => selectUser(user)}
 					>
-						<UserAvatar {user} size="sm" />
+						<UserAvatar user={toUserLike(user)} size="sm" />
 						<div class="min-w-0">
 							<p class="text-sm text-white">{user.displayName}</p>
-							<p class="text-xs text-text-secondary">{user.topArtists[0]?.artist.name}</p>
+							<p class="text-xs text-text-secondary">sha1: {user.sha1}…</p>
 						</div>
 					</button>
 				{/each}

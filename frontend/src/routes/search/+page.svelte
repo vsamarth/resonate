@@ -1,9 +1,15 @@
 <script lang="ts">
 	import { artists } from '$lib/data/artists';
-	import { users } from '$lib/data/users';
 	import ArtistCard from '$lib/components/ArtistCard.svelte';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
+	import type { ListUser } from '$lib/types';
 	import { Search } from 'lucide-svelte';
+
+	interface Props {
+		data: { users: ListUser[] };
+	}
+
+	let { data }: Props = $props();
 
 	let query = $state('');
 	let activeTab = $state<'artists' | 'users'>('artists');
@@ -21,13 +27,16 @@
 	);
 
 	const filteredUsers = $derived(
-		users.filter(
+		data.users.filter(
 			(u) =>
 				query.length === 0 ||
 				u.displayName.toLowerCase().includes(query.toLowerCase()) ||
 				u.sha1.includes(query.toLowerCase())
 		)
 	);
+
+	// UserAvatar expects User; ListUser has displayName, sha1, id — use minimal shape
+	const userForAvatar = (u: ListUser) => ({ ...u, topArtists: [] });
 </script>
 
 <div class="min-h-screen px-8 py-10">
@@ -102,21 +111,10 @@
 						href="/user/{user.id}"
 						class="flex items-center gap-4 rounded-xl bg-base-card p-4 transition-colors hover:bg-base-surface"
 					>
-						<UserAvatar {user} size="md" />
+						<UserAvatar user={userForAvatar(user)} size="md" />
 						<div class="min-w-0 flex-1">
 							<p class="font-medium text-white">{user.displayName}</p>
 							<p class="text-sm text-text-secondary">sha1: {user.sha1}…</p>
-						</div>
-						<!-- Top 3 artists inline -->
-						<div class="hidden items-center gap-2 sm:flex">
-							{#each user.topArtists.slice(0, 3) as ta}
-								<div
-									class="h-8 w-8 rounded-lg bg-gradient-to-br {ta.artist.gradient} flex items-center justify-center text-xs font-bold text-white/80"
-									title={ta.artist.name}
-								>
-									{ta.artist.name[0]}
-								</div>
-							{/each}
 						</div>
 					</a>
 				{/each}

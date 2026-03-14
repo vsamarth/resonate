@@ -13,16 +13,17 @@
 		return 'Good evening';
 	}
 
-	const topArtists = $derived($activeUser.topArtists.map((ta) => ta.artist));
+	const topArtists = $derived($activeUser?.topArtists?.map((ta) => ta.artist) ?? []);
 
 	let recs = $state<Recommendation[]>([]);
 	let recsLoading = $state(true);
 	const recScoreMax = $derived(recs.length ? Math.max(...recs.map((r) => r.score)) : undefined);
 
 	$effect(() => {
-		const userIdx = $activeUser.userIdx;
+		const user = $activeUser;
+		if (!user) return;
 		recsLoading = true;
-		fetchRecommendations(userIdx, 10).then((items) => {
+		fetchRecommendations(user.userIdx, 10).then((items) => {
 			recs = items;
 			recsLoading = false;
 		});
@@ -30,40 +31,46 @@
 </script>
 
 <div class="min-h-screen px-8 py-10">
-	<!-- Header -->
-	<div class="mb-10 flex items-center gap-4">
-		<UserAvatar user={$activeUser} size="lg" />
-		<div>
-			<p class="text-sm text-text-secondary">{getGreeting()}</p>
-			<h1 class="text-3xl font-bold text-white">{$activeUser.displayName}</h1>
+	{#if $activeUser}
+		<!-- Header -->
+		<div class="mb-10 flex items-center gap-4">
+			<UserAvatar user={$activeUser} size="lg" />
+			<div>
+				<p class="text-sm text-text-secondary">{getGreeting()}</p>
+				<h1 class="text-3xl font-bold text-white">{$activeUser.displayName}</h1>
+			</div>
 		</div>
-	</div>
 
-	<!-- Your Top Artists -->
-	<ArtistRow
-		title="Your Top Artists"
-		subtitle="Based on your listening history"
-		items={topArtists}
-		seeAllHref="/user/{$activeUser.id}"
-		cardSize="md"
-	/>
-
-	<!-- Made For You -->
-	{#if recsLoading}
-		<div class="mb-10">
-			<p class="text-sm text-text-secondary animate-pulse">Loading recommendations…</p>
-		</div>
-	{:else if recs.length > 0}
+		<!-- Your Top Artists -->
 		<ArtistRow
-			title="Made For You"
-			subtitle="Personalized picks from the LightGCN model"
-			items={recs}
-			showScore={true}
-			showCategory={false}
-			scoreMax={recScoreMax}
+			title="Your Top Artists"
+			subtitle="Based on your listening history"
+			items={topArtists}
 			seeAllHref="/user/{$activeUser.id}"
 			cardSize="md"
 		/>
+
+		<!-- Made For You -->
+		{#if recsLoading}
+			<div class="mb-10">
+				<p class="text-sm text-text-secondary animate-pulse">Loading recommendations…</p>
+			</div>
+		{:else if recs.length > 0}
+			<ArtistRow
+				title="Made For You"
+				subtitle="Personalized picks from the LightGCN model"
+				items={recs}
+				showScore={true}
+				showCategory={false}
+				scoreMax={recScoreMax}
+				seeAllHref="/user/{$activeUser.id}"
+				cardSize="md"
+			/>
+		{/if}
+	{:else}
+		<div class="mb-10">
+			<p class="text-sm text-text-secondary animate-pulse">Loading user…</p>
+		</div>
 	{/if}
 
 	<!-- Trending -->

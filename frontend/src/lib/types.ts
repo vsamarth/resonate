@@ -24,6 +24,15 @@ export interface User {
 	userIdx: number;
 }
 
+/** User list item from DB (for switcher/search). */
+export interface ListUser {
+	id: string;
+	userIdx: number;
+	sha1: string;
+	displayName: string;
+	avatarUrl: string | null;
+}
+
 export interface Recommendation {
 	artist: Artist;
 	score: number;
