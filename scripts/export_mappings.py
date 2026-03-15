@@ -40,9 +40,10 @@ plays = pd.read_csv(
 plays = plays.dropna(subset=["artist_mbid"])
 plays = plays[plays["artist_mbid"].astype(str).str.len() > 0]
 
-# One interaction per (user, artist)
-edges = plays[["user_sha1", "artist_mbid", "artist_name"]].drop_duplicates(
-    subset=["user_sha1", "artist_mbid"]
+# One row per (user, artist) with summed play count (matches dataset semantics)
+edges = (
+    plays.groupby(["user_sha1", "artist_mbid", "artist_name"], as_index=False)
+    .agg(plays=("plays", "sum"))
 )
 edges = edges.reset_index(drop=True)
 
@@ -72,13 +73,21 @@ n_users = int(edges["user_idx"].max()) + 1
 n_items = int(edges["item_idx"].max()) + 1
 print(f"After filter: n_users={n_users}, n_items={n_items}, n_edges={len(edges)}")
 
-# Build item_index: one row per item_idx
+# Artist total plays (sum of plays over all user–artist rows in filtered edges)
+artist_total_plays = (
+    edges.groupby("item_idx", as_index=False)
+    .agg(total_plays=("plays", "sum"))
+)
+
+# Build item_index: one row per item_idx, with total_plays from dataset
 item_index = (
     edges[["item_idx", "artist_mbid", "artist_name"]]
     .drop_duplicates("item_idx")
     .sort_values("item_idx")
     .reset_index(drop=True)
 )
+item_index = item_index.merge(artist_total_plays, on="item_idx", how="left")
+item_index["total_plays"] = item_index["total_plays"].fillna(0).astype(int)
 
 # Build user_index: one row per user_idx
 user_index = (

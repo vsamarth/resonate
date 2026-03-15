@@ -3,7 +3,8 @@ import { getArtistData } from '$lib/api/wikipedia';
 import { getMbArtist } from '$lib/api/musicbrainz';
 import {
 	getArtistByMbid as getDbArtist,
-	getSimilarArtists
+	getSimilarArtists,
+	getListenerCountForArtist
 } from '$lib/server/recommendations';
 import { getTopListenersForArtist } from '$lib/server/users';
 import { gradientFromMbid, titleCase, toArtist } from '$lib/api/recommendations';
@@ -42,16 +43,26 @@ export const load: PageServerLoad = async ({ params }) => {
 			? similarResult.value.map((r) => toArtist(r))
 			: [];
 
+	// Use DB play counts when available (match dataset)
+	const totalPlays = dbArtist?.total_plays ?? staticArtist?.totalPlays ?? 0;
+	const listenerCount =
+		itemIdx != null ? await getListenerCountForArtist(itemIdx) : 0;
+
 	const artist: Artist = staticArtist ?? {
 		mbid: params.mbid,
 		name: artistName,
 		genre: mb?.tags?.[0]?.name ?? '',
 		country: mb?.country ?? '',
-		totalPlays: 0,
-		listenerCount: 0,
+		totalPlays,
+		listenerCount,
 		gradient: gradientFromMbid(params.mbid),
 		similarMbids: []
 	};
+	// Override with DB stats when we have them (so dataset plays are correct even for static artists)
+	if (dbArtist != null) {
+		artist.totalPlays = totalPlays;
+		artist.listenerCount = listenerCount;
+	}
 
 	const topListeners = await getTopListenersForArtist(params.mbid, 5);
 

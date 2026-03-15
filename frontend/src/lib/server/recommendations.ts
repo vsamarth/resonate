@@ -16,6 +16,7 @@ export interface ArtistInfo {
 	item_idx: number;
 	mbid: string;
 	name: string;
+	total_plays: number;
 }
 
 /**
@@ -64,14 +65,24 @@ export async function getSimilarArtists(itemIdx: number, k = 6): Promise<ArtistR
 }
 
 /**
- * Look up a single artist by MusicBrainz ID.
+ * Look up a single artist by MusicBrainz ID (includes total_plays from dataset).
  */
 export async function getArtistByMbid(mbid: string): Promise<ArtistInfo | null> {
 	const rows = await db.execute<ArtistInfo>(sql`
-		SELECT item_idx, mbid, name
+		SELECT item_idx, mbid, name, COALESCE(total_plays, 0) AS total_plays
 		FROM artists
 		WHERE mbid = ${mbid}
 		LIMIT 1
 	`);
 	return rows.rows[0] ?? null;
+}
+
+/**
+ * Number of users who have this artist in their history (train_edges).
+ */
+export async function getListenerCountForArtist(itemIdx: number): Promise<number> {
+	const rows = await db.execute<{ count: string }>(sql`
+		SELECT count(*)::text AS count FROM train_edges WHERE item_idx = ${itemIdx}
+	`);
+	return parseInt(rows.rows[0]?.count ?? '0', 10);
 }

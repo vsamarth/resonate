@@ -39,7 +39,7 @@ export async function getUsersWithProfiles(limit = 100): Promise<ListUser[]> {
 	}));
 }
 
-/** Full user with top artists (from train_edges). Plays set to 1 (we don't store counts). */
+/** Full user with top artists (from train_edges), ordered by play count. */
 export async function getUserWithTopArtists(userIdx: number): Promise<User | null> {
 	const userRows = await db.execute<UserRow>(sql`
 		SELECT user_idx, sha1, display_name, avatar_url
@@ -50,18 +50,18 @@ export async function getUserWithTopArtists(userIdx: number): Promise<User | nul
 	const u = userRows.rows[0];
 	if (!u) return null;
 
-	const artistRows = await db.execute<ArtistRow>(sql`
-		SELECT a.item_idx, a.mbid, a.name
+	const artistRows = await db.execute<ArtistRow & { plays: number }>(sql`
+		SELECT a.item_idx, a.mbid, a.name, COALESCE(t.plays, 1) AS plays
 		FROM train_edges t
 		INNER JOIN artists a ON a.item_idx = t.item_idx
 		WHERE t.user_idx = ${userIdx}
-		ORDER BY t.item_idx
+		ORDER BY COALESCE(t.plays, 1) DESC
 		LIMIT 20
 	`);
 
 	const topArtists: UserTopArtist[] = artistRows.rows.map((r) => ({
 		artist: toArtist({ item_idx: r.item_idx, mbid: r.mbid, name: r.name, score: 1 }),
-		plays: 1
+		plays: r.plays
 	}));
 
 	return {
@@ -84,7 +84,7 @@ function toMinimalUser(r: UserRow): User {
 	};
 }
 
-/** Users who have this artist in their history (train_edges). Plays = 1. */
+/** Users who have this artist in their history (train_edges), ordered by play count. */
 export async function getTopListenersForArtist(
 	mbid: string,
 	limit = 5
@@ -95,17 +95,17 @@ export async function getTopListenersForArtist(
 	const itemIdx = itemRow.rows[0]?.item_idx;
 	if (itemIdx == null) return [];
 
-	const rows = await db.execute<UserRow>(sql`
-		SELECT u.user_idx, u.sha1, u.display_name, u.avatar_url
+	const rows = await db.execute<UserRow & { plays: number }>(sql`
+		SELECT u.user_idx, u.sha1, u.display_name, u.avatar_url, COALESCE(t.plays, 1) AS plays
 		FROM train_edges t
 		INNER JOIN users u ON u.user_idx = t.user_idx
 		WHERE t.item_idx = ${itemIdx}
-		ORDER BY u.user_idx
+		ORDER BY COALESCE(t.plays, 1) DESC
 		LIMIT ${limit}
 	`);
 
 	return rows.rows.map((r) => ({
 		user: toMinimalUser(r),
-		plays: 1
+		plays: r.plays
 	}));
 }

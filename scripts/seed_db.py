@@ -84,7 +84,8 @@ def main() -> None:
             item_idx   INTEGER PRIMARY KEY,
             mbid       TEXT    NOT NULL UNIQUE,
             name       TEXT    NOT NULL,
-            embedding  vector(64) NOT NULL
+            embedding  vector(64) NOT NULL,
+            total_plays INTEGER NOT NULL DEFAULT 0
         )
     """)
 
@@ -93,11 +94,14 @@ def main() -> None:
     cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT")
     cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS country TEXT")
     cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ")
+    cur.execute("ALTER TABLE artists ADD COLUMN IF NOT EXISTS total_plays INTEGER NOT NULL DEFAULT 0")
+    cur.execute("ALTER TABLE train_edges ADD COLUMN IF NOT EXISTS plays INTEGER NOT NULL DEFAULT 1")
 
     cur.execute("""
         CREATE TABLE IF NOT EXISTS train_edges (
             user_idx   INTEGER NOT NULL,
             item_idx   INTEGER NOT NULL,
+            plays      INTEGER NOT NULL DEFAULT 1,
             PRIMARY KEY (user_idx, item_idx)
         )
     """)
@@ -158,48 +162,67 @@ def main() -> None:
     print(f"  done in {time.time()-t0:.1f}s")
 
     # ------------------------------------------------------------------
-    # Artists
+    # Artists (with total_plays from item_index if present)
     # ------------------------------------------------------------------
     print("Seeding artists…")
     t0 = time.time()
+    total_plays_col = "total_plays" if "total_plays" in item_idx_df.columns else None
     artist_rows = [
-        (int(row.item_idx), str(row.artist_mbid), str(row.artist_name),
-         fmt_vec(item_emb[int(row.item_idx)]))
+        (
+            int(row.item_idx),
+            str(row.artist_mbid),
+            str(row.artist_name),
+            fmt_vec(item_emb[int(row.item_idx)]),
+            int(getattr(row, total_plays_col, 0) or 0) if total_plays_col else 0,
+        )
         for _, row in item_idx_df.iterrows()
     ]
     for i in range(0, len(artist_rows), BATCH):
         psycopg2.extras.execute_values(
             cur,
             """
-            INSERT INTO artists (item_idx, mbid, name, embedding)
+            INSERT INTO artists (item_idx, mbid, name, embedding, total_plays)
             VALUES %s
             ON CONFLICT (item_idx) DO UPDATE
-              SET mbid      = EXCLUDED.mbid,
-                  name      = EXCLUDED.name,
-                  embedding = EXCLUDED.embedding
+              SET mbid        = EXCLUDED.mbid,
+                  name        = EXCLUDED.name,
+                  embedding   = EXCLUDED.embedding,
+                  total_plays = EXCLUDED.total_plays
             """,
             artist_rows[i : i + BATCH],
-            template="(%s, %s, %s, %s::vector)",
+            template="(%s, %s, %s, %s::vector, %s)",
         )
     conn.commit()
     print(f"  done in {time.time()-t0:.1f}s")
 
     # ------------------------------------------------------------------
-    # Training edges
+    # Training edges (with plays from CSV if present)
     # ------------------------------------------------------------------
     print("Seeding train_edges…")
     t0 = time.time()
-    edge_rows = list(train_df[["user_idx", "item_idx"]].itertuples(index=False, name=None))
+    if "plays" in train_df.columns:
+        edge_rows = list(
+            train_df[["user_idx", "item_idx", "plays"]].itertuples(index=False, name=None)
+        )
+        edge_template = "(%s, %s, %s)"
+        edge_cols = "(user_idx, item_idx, plays)"
+    else:
+        edge_rows = [
+            (*t, 1) for t in train_df[["user_idx", "item_idx"]].itertuples(index=False, name=None)
+        ]
+        edge_template = "(%s, %s, %s)"
+        edge_cols = "(user_idx, item_idx, plays)"
     EDGE_BATCH = 2000
     for i in range(0, len(edge_rows), EDGE_BATCH):
         psycopg2.extras.execute_values(
             cur,
-            """
-            INSERT INTO train_edges (user_idx, item_idx)
+            f"""
+            INSERT INTO train_edges {edge_cols}
             VALUES %s
-            ON CONFLICT DO NOTHING
+            ON CONFLICT (user_idx, item_idx) DO UPDATE SET plays = EXCLUDED.plays
             """,
             edge_rows[i : i + EDGE_BATCH],
+            template=edge_template,
         )
     conn.commit()
     print(f"  done in {time.time()-t0:.1f}s")
