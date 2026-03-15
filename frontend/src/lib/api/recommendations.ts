@@ -1,7 +1,7 @@
 import type { Artist, Recommendation } from '$lib/types';
 import { artists as staticArtists } from '$lib/data/artists';
 
-// Same-origin API routes — no need for an external backend.
+// Same-origin API routes (SvelteKit server).
 const BASE = '/api';
 
 // Gradient palette — cycled for artists not in the static catalog
@@ -63,8 +63,8 @@ export function toArtist(rec: ApiRec): Artist {
 	};
 }
 
-/** Fetch top-k recommendations for a model user index from the FastAPI backend.
- *  Returns an empty array on any error (backend down, out-of-range, etc.). */
+/** Fetch top-k recommendations for a model user index from the API.
+ *  Returns an empty array on any error (server error, out-of-range, etc.). */
 export async function fetchRecommendations(userIdx: number, k = 10): Promise<Recommendation[]> {
 	try {
 		const res = await fetch(`${BASE}/recommendations/${userIdx}?k=${k}`);
@@ -86,7 +86,7 @@ export interface ApiArtistInfo {
 }
 
 /** Look up an artist in the model dataset by MBID.
- *  Returns null if the MBID isn't in the dataset or the backend is down. */
+ *  Returns null if the MBID isn't in the dataset or the API is unavailable. */
 export async function fetchArtistByMbid(mbid: string): Promise<ApiArtistInfo | null> {
 	try {
 		const res = await fetch(`${BASE}/artists/by-mbid/${encodeURIComponent(mbid)}`);
