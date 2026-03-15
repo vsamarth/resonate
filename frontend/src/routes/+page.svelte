@@ -5,6 +5,8 @@
 	import type { Recommendation } from '$lib/types';
 	import ArtistRow from '$lib/components/ArtistRow.svelte';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
+	import Skeleton from '$lib/components/Skeleton.svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 
 	function getGreeting(): string {
 		const h = new Date().getHours();
@@ -42,19 +44,33 @@
 		</div>
 
 		<!-- Your Top Artists -->
-		<ArtistRow
-			title="Your Top Artists"
-			subtitle="Based on your listening history"
-			items={topArtists}
-			seeAllHref="/user/{$activeUser.id}"
-			cardSize="md"
-		/>
+		{#if topArtists.length > 0}
+			<ArtistRow
+				title="Your Top Artists"
+				subtitle="Based on your listening history"
+				items={topArtists}
+				seeAllHref="/user/{$activeUser.id}"
+				cardSize="md"
+			/>
+		{:else}
+			<section class="mb-8">
+				<h2 class="mb-4 text-xl font-semibold text-white">Your Top Artists</h2>
+				<EmptyState
+					title="No listening history yet"
+					description="Your top artists will appear here once you have some plays."
+				/>
+			</section>
+		{/if}
 
 		<!-- Made For You -->
 		{#if recsLoading}
-			<div class="mb-10">
-				<p class="text-sm text-text-secondary animate-pulse">Loading recommendations…</p>
-			</div>
+			<section class="mb-8">
+				<div class="mb-4 px-1">
+					<h2 class="text-xl font-semibold text-white">Made For You</h2>
+					<p class="mt-0.5 text-sm text-text-secondary">Personalized picks from the LightGCN model</p>
+				</div>
+				<Skeleton variant="row" />
+			</section>
 		{:else if recs.length > 0}
 			<ArtistRow
 				title="Made For You"
@@ -66,11 +82,39 @@
 				seeAllHref="/user/{$activeUser.id}"
 				cardSize="md"
 			/>
+		{:else}
+			<section class="mb-8">
+				<div class="mb-4 px-1">
+					<h2 class="text-xl font-semibold text-white">Made For You</h2>
+					<p class="mt-0.5 text-sm text-text-secondary">Personalized picks from the LightGCN model</p>
+				</div>
+				<EmptyState
+					title="No recommendations yet"
+					description="We need a bit more listening history to personalize your picks."
+				/>
+			</section>
 		{/if}
 	{:else}
-		<div class="mb-10">
-			<p class="text-sm text-text-secondary animate-pulse">Loading user…</p>
+		<!-- User loading skeleton -->
+		<div class="mb-10 flex items-center gap-4">
+			<Skeleton variant="avatar" class="h-16 w-16" />
+			<div class="space-y-2">
+				<Skeleton variant="text" class="h-3 w-24" />
+				<Skeleton variant="text" class="h-8 w-48" />
+			</div>
 		</div>
+		<section class="mb-8">
+			<div class="mb-4 h-7 w-64">
+				<Skeleton variant="text" class="h-full w-full" />
+			</div>
+			<Skeleton variant="row" />
+		</section>
+		<section class="mb-8">
+			<div class="mb-4 h-7 w-40">
+				<Skeleton variant="text" class="h-full w-full" />
+			</div>
+			<Skeleton variant="row" />
+		</section>
 	{/if}
 
 	<!-- Trending -->

@@ -1,9 +1,11 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { artists } from '$lib/data/artists';
 	import ArtistCard from '$lib/components/ArtistCard.svelte';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
+	import EmptyState from '$lib/components/EmptyState.svelte';
 	import type { ListUser } from '$lib/types';
-	import { Search } from 'lucide-svelte';
+	import { Search, X } from 'lucide-svelte';
 
 	interface Props {
 		data: { users: ListUser[] };
@@ -14,6 +16,19 @@
 	let query = $state('');
 	let activeTab = $state<'artists' | 'users'>('artists');
 	let activeGenre = $state<string | null>(null);
+	let searchInputEl = $state<HTMLInputElement | null>(null);
+
+	onMount(() => {
+		function onKeydown(e: KeyboardEvent) {
+			if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+			const target = e.target as HTMLElement;
+			if (target?.closest('input, textarea, [contenteditable]')) return;
+			e.preventDefault();
+			searchInputEl?.focus();
+		}
+		window.addEventListener('keydown', onKeydown);
+		return () => window.removeEventListener('keydown', onKeydown);
+	});
 
 	const allGenres = [...new Set(artists.map((a) => a.genre))].sort();
 
@@ -44,14 +59,25 @@
 	<h1 class="mb-6 text-3xl font-bold text-white">Search</h1>
 
 	<div class="relative mb-6 max-w-2xl">
-		<Search class="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-text-secondary" />
+		<Search class="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-text-secondary pointer-events-none" />
 		<input
+			bind:this={searchInputEl}
 			type="text"
-			placeholder="Artists, users…"
+			placeholder="Artists, users… (press / to focus)"
 			bind:value={query}
-			class="w-full rounded-2xl bg-base-surface py-3.5 pl-12 pr-4 text-white placeholder:text-text-secondary
+			class="w-full rounded-2xl bg-base-surface py-3.5 pl-12 pr-11 text-white placeholder:text-text-secondary
 				outline-none ring-1 ring-white/10 transition focus:ring-accent"
 		/>
+		{#if query.length > 0}
+			<button
+				type="button"
+				onclick={() => (query = '')}
+				aria-label="Clear search"
+				class="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-text-secondary transition hover:bg-white/10 hover:text-white"
+			>
+				<X class="h-4 w-4" />
+			</button>
+		{/if}
 	</div>
 
 	<!-- Tabs -->
@@ -100,7 +126,11 @@
 				{/each}
 			</div>
 		{:else}
-			<p class="mt-16 text-center text-text-secondary">No artists match "{query}"</p>
+			<EmptyState
+				title={query ? `No artists match "${query}"` : 'No artists yet'}
+				description={query ? 'Try a different search or genre.' : 'Artists will show up here.'}
+				class="mt-16"
+			/>
 		{/if}
 	{:else}
 		<!-- Users list -->
@@ -120,7 +150,11 @@
 				{/each}
 			</div>
 		{:else}
-			<p class="mt-16 text-center text-text-secondary">No users match "{query}"</p>
+			<EmptyState
+				title={query ? `No users match "${query}"` : 'No users yet'}
+				description={query ? 'Try a different search.' : 'Users will show up here.'}
+				class="mt-16"
+			/>
 		{/if}
 	{/if}
 </div>

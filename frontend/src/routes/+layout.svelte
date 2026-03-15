@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '../app.css';
 	import Navbar from '$lib/components/Navbar.svelte';
+	import Toast from '$lib/components/Toast.svelte';
 	import { activeUser } from '$lib/stores';
 	import type { Snippet } from 'svelte';
 
@@ -24,4 +25,5 @@
 	<main class="pt-14">
 		{@render children()}
 	</main>
+	<Toast />
 </div>

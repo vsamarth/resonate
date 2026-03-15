@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { activeUser } from '$lib/stores';
+	import { activeUser, toastStore } from '$lib/stores';
 	import type { User, ListUser } from '$lib/types';
 	import UserAvatar from './UserAvatar.svelte';
 	import { Home, Search, Music2, ChevronDown, Check } from 'lucide-svelte';
@@ -41,6 +41,7 @@
 		const fullUser: User = await res.json();
 		activeUser.set(fullUser);
 		userMenuOpen = false;
+		toastStore.show(`Now listening as ${user.displayName}`);
 	}
 
 	// ListUser has displayName, sha1; UserAvatar only needs those (+ topArtists for type)

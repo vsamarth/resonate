@@ -2,6 +2,7 @@
 	import type { Artist } from '$lib/types';
 	import ScoreBar from './ScoreBar.svelte';
 	import ArtistImage from './ArtistImage.svelte';
+	import { Play } from 'lucide-svelte';
 
 	interface Props {
 		artist: Artist;
@@ -41,8 +42,12 @@
 			heightClass={artSizeClasses[size]}
 			rounded="rounded-card"
 		/>
-		<!-- Hover overlay -->
-		<div class="absolute inset-0 rounded-card bg-black/0 transition-colors duration-200 group-hover:bg-black/20 pointer-events-none"></div>
+		<!-- Hover overlay + play icon -->
+		<div class="absolute inset-0 rounded-card bg-black/0 transition-all duration-200 group-hover:bg-black/40 pointer-events-none flex items-center justify-center">
+			<div class="opacity-0 scale-75 transition-all duration-200 group-hover:opacity-100 group-hover:scale-100 flex h-12 w-12 items-center justify-center rounded-full bg-accent text-white shadow-lg">
+				<Play class="h-5 w-5 ml-0.5" fill="currentColor" />
+			</div>
+		</div>
 	</div>
 
 	<!-- Info -->
