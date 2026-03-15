@@ -50,12 +50,14 @@ export async function getUserWithTopArtists(userIdx: number): Promise<User | nul
 	const u = userRows.rows[0];
 	if (!u) return null;
 
+	// train_edges may have been created without a plays column (e.g. by Drizzle before it was added).
+	// Select only columns that always exist; use 1 for plays so the app works either way.
 	const artistRows = await db.execute<ArtistRow & { plays: number }>(sql`
-		SELECT a.item_idx, a.mbid, a.name, COALESCE(t.plays, 1) AS plays
+		SELECT a.item_idx, a.mbid, a.name, 1 AS plays
 		FROM train_edges t
 		INNER JOIN artists a ON a.item_idx = t.item_idx
 		WHERE t.user_idx = ${userIdx}
-		ORDER BY COALESCE(t.plays, 1) DESC
+		ORDER BY a.item_idx
 		LIMIT 20
 	`);
 
@@ -96,11 +98,11 @@ export async function getTopListenersForArtist(
 	if (itemIdx == null) return [];
 
 	const rows = await db.execute<UserRow & { plays: number }>(sql`
-		SELECT u.user_idx, u.sha1, u.display_name, u.avatar_url, COALESCE(t.plays, 1) AS plays
+		SELECT u.user_idx, u.sha1, u.display_name, u.avatar_url, 1 AS plays
 		FROM train_edges t
 		INNER JOIN users u ON u.user_idx = t.user_idx
 		WHERE t.item_idx = ${itemIdx}
-		ORDER BY COALESCE(t.plays, 1) DESC
+		ORDER BY u.user_idx
 		LIMIT ${limit}
 	`);
 

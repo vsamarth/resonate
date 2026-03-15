@@ -26,5 +26,6 @@ Thumbs.db
 dist/
 build/
 
-# Dataset
+# Dataset / data
 dataset/
+data/

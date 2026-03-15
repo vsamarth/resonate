@@ -95,7 +95,6 @@ def main() -> None:
     cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS country TEXT")
     cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ")
     cur.execute("ALTER TABLE artists ADD COLUMN IF NOT EXISTS total_plays INTEGER NOT NULL DEFAULT 0")
-    cur.execute("ALTER TABLE train_edges ADD COLUMN IF NOT EXISTS plays INTEGER NOT NULL DEFAULT 1")
 
     cur.execute("""
         CREATE TABLE IF NOT EXISTS train_edges (
@@ -105,6 +104,7 @@ def main() -> None:
             PRIMARY KEY (user_idx, item_idx)
         )
     """)
+    cur.execute("ALTER TABLE train_edges ADD COLUMN IF NOT EXISTS plays INTEGER NOT NULL DEFAULT 1")
     conn.commit()
 
     # ------------------------------------------------------------------
