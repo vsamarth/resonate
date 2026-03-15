@@ -2,10 +2,10 @@
 Populate personal profile fields for the top 100 users (user_idx 0..99)
 using Faker. Run after seed_db.py.
 
-Usage (from project root):
+Usage (from model/):
     uv run python scripts/seed_user_profiles.py
 
-Reads DATABASE_URL from frontend/.env or env.
+Reads DATABASE_URL from repo root .env or env.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ ROOT = Path(__file__).parent.parent
 
 
 def _load_env() -> str:
-    env_file = ROOT / "frontend" / ".env"
+    env_file = ROOT.parent / ".env"
     if env_file.exists():
         for line in env_file.read_text().splitlines():
             line = line.strip()
@@ -26,7 +26,7 @@ def _load_env() -> str:
                 return line.split("=", 1)[1].strip().strip('"').strip("'")
     url = os.environ.get("DATABASE_URL", "")
     if not url:
-        sys.exit("DATABASE_URL not set. Create frontend/.env or set the env var.")
+        sys.exit("DATABASE_URL not set. Create .env in repo root or set the env var.")
     return url
 
 

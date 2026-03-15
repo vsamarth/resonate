@@ -5,8 +5,8 @@ Replays the exact same pipeline as rec_dataset.ipynb to produce:
   data/model/item_index.csv  — item_idx, artist_mbid, artist_name
   data/model/user_index.csv  — user_idx, user_sha1
 
-Run from the project root:
-  uv run python scripts/export_mappings.py
+Run from the model directory:
+  cd model && uv run python scripts/export_mappings.py
 """
 
 from pathlib import Path
@@ -14,9 +14,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-DATASET_DIR = Path("dataset")
+MODEL_ROOT = Path(__file__).resolve().parent.parent
+DATASET_DIR = MODEL_ROOT / "dataset"
 PLAYS_FILE = DATASET_DIR / "usersha1-artmbid-artname-plays.tsv"
-OUT_DIR = Path("data/model")
+OUT_DIR = MODEL_ROOT / "data" / "model"
 
 # Must match rec_dataset.ipynb exactly
 NROWS = 100_000

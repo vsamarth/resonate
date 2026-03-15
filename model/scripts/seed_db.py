@@ -1,10 +1,10 @@
 """
 Seed Postgres/pgvector with Resonate embeddings and index data.
 
-Usage (from project root):
+Usage (from model/):
     uv run python scripts/seed_db.py [--reset]
 
-Reads DATABASE_URL from frontend/.env (falls back to env var).
+Reads DATABASE_URL from repo root .env or environment.
 Pass --reset to truncate all tables before inserting.
 """
 
@@ -23,8 +23,8 @@ ROOT = Path(__file__).parent.parent
 DATA = ROOT / "data"
 
 def _load_env() -> str:
-    """Return DATABASE_URL from frontend/.env or environment."""
-    env_file = ROOT / "frontend" / ".env"
+    """Return DATABASE_URL from repo root .env or environment."""
+    env_file = ROOT.parent / ".env"
     if env_file.exists():
         for line in env_file.read_text().splitlines():
             line = line.strip()
@@ -34,7 +34,7 @@ def _load_env() -> str:
     if not url:
         sys.exit(
             "DATABASE_URL not found.\n"
-            "Create frontend/.env with DATABASE_URL=postgresql://... "
+            "Create .env in the repo root with DATABASE_URL=postgresql://... "
             "or set the env var."
         )
     return url

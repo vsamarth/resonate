@@ -1,31 +1,36 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-.venv/
-venv/
-.env
-.env.*
-!.env.example
+node_modules
+
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
 
 # OS
 .DS_Store
 Thumbs.db
 
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
 
-# Jupyter
-.ipynb_checkpoints/
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
 
-# Build / output
-*.egg-info/
-dist/
-build/
-
-# Dataset / data
-dataset/
-data/
+# Python / model (model/)
+model/.venv/
+model/venv/
+model/__pycache__/
+model/**/*.py[cod]
+model/**/*$py.class
+model/.ipynb_checkpoints/
+model/*.egg-info/
+model/dist/
+model/build/
+model/dataset/
+model/data/
