@@ -23,7 +23,7 @@ const EMBED_DIM = 64;
 // Tables
 // ---------------------------------------------------------------------------
 
-/** One row per artist / item in the LightGCN dataset */
+/** One row per artist / item in the Resonate dataset */
 export const artists = pgTable('artists', {
 	itemIdx: integer('item_idx').primaryKey(),
 	mbid: text('mbid').notNull().unique(),
@@ -33,7 +33,7 @@ export const artists = pgTable('artists', {
 	totalPlays: integer('total_plays').notNull().default(0)
 });
 
-/** One row per user in the LightGCN dataset */
+/** One row per user in the Resonate dataset */
 export const users = pgTable('users', {
 	userIdx: integer('user_idx').primaryKey(),
 	sha1: text('sha1').notNull().unique(),

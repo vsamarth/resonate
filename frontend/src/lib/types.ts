@@ -20,7 +20,7 @@ export interface User {
 	sha1: string;
 	displayName: string;
 	topArtists: UserTopArtist[];
-	/** Integer index into the LightGCN embedding matrix (0 … n_users-1) */
+	/** Integer index into the Resonate embedding matrix (0 … n_users-1) */
 	userIdx: number;
 }
 

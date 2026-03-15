@@ -1,5 +1,5 @@
 """
-Seed Postgres/pgvector with LightGCN embeddings and index data.
+Seed Postgres/pgvector with Resonate embeddings and index data.
 
 Usage (from project root):
     uv run python scripts/seed_db.py [--reset]
@@ -41,7 +41,7 @@ def _load_env() -> str:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Seed LightGCN data into Postgres")
+    parser = argparse.ArgumentParser(description="Seed Resonate data into Postgres")
     parser.add_argument("--reset", action="store_true", help="Truncate tables before seeding")
     args = parser.parse_args()
 

@@ -67,14 +67,14 @@
 			<section class="mb-8">
 				<div class="mb-4 px-1">
 					<h2 class="text-xl font-semibold text-white">Made For You</h2>
-					<p class="mt-0.5 text-sm text-text-secondary">Personalized picks from the LightGCN model</p>
+					<p class="mt-0.5 text-sm text-text-secondary">Personalized picks from Resonate</p>
 				</div>
 				<Skeleton variant="row" />
 			</section>
 		{:else if recs.length > 0}
 			<ArtistRow
 				title="Made For You"
-				subtitle="Personalized picks from the LightGCN model"
+				subtitle="Personalized picks from Resonate"
 				items={recs}
 				showScore={true}
 				showCategory={false}
@@ -86,7 +86,7 @@
 			<section class="mb-8">
 				<div class="mb-4 px-1">
 					<h2 class="text-xl font-semibold text-white">Made For You</h2>
-					<p class="mt-0.5 text-sm text-text-secondary">Personalized picks from the LightGCN model</p>
+					<p class="mt-0.5 text-sm text-text-secondary">Personalized picks from Resonate</p>
 				</div>
 				<EmptyState
 					title="No recommendations yet"

@@ -21,7 +21,7 @@ export async function getMbArtist(mbid: string): Promise<MbArtist | null> {
 			headers: {
 				// MusicBrainz requires a descriptive User-Agent for server-side calls.
 				// Browsers send their own UA automatically.
-				'User-Agent': 'LightGCN-Music-Demo/0.1 (https://github.com/lightgcn)'
+				'User-Agent': 'Resonate/0.1 (https://github.com/resonate)'
 			}
 		});
 		if (!res.ok) throw new Error(`MusicBrainz ${res.status}`);

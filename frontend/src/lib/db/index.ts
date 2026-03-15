@@ -11,7 +11,7 @@ import * as schema from './schema';
 const url = env?.DATABASE_URL;
 if (!url) {
 	throw new Error(
-		'DATABASE_URL is not set. Create frontend/.env with:\n  DATABASE_URL=postgresql://lightgcn:lightgcn@localhost:5432/lightgcn'
+		'DATABASE_URL is not set. Create frontend/.env with:\n  DATABASE_URL=postgresql://resonate:resonate@localhost:5432/resonate'
 	);
 }
 

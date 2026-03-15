@@ -182,7 +182,7 @@
 			<ArtistRow
 				title="Listeners Also Like"
 				subtitle={modelSimilar.length > 0
-					? 'Nearest neighbours in LightGCN embedding space'
+					? 'Nearest neighbours in Resonate embedding space'
 					: 'Similar artists'}
 				items={similarArtists}
 				cardSize="sm"

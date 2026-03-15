@@ -1,19 +1,19 @@
 services:
   db:
     image: pgvector/pgvector:pg16
-    container_name: lightgcn-db
+    container_name: resonate-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-lightgcn}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lightgcn}
-      POSTGRES_DB: ${POSTGRES_DB:-lightgcn}
+      POSTGRES_USER: ${POSTGRES_USER:-resonate}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-resonate}
+      POSTGRES_DB: ${POSTGRES_DB:-resonate}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lightgcn} -d ${POSTGRES_DB:-lightgcn}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-resonate} -d ${POSTGRES_DB:-resonate}"]
       interval: 5s
       timeout: 5s
       retries: 5

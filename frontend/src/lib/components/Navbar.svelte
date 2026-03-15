@@ -60,7 +60,7 @@
 			<div class="flex h-7 w-7 items-center justify-center rounded-lg bg-accent">
 				<Music2 class="h-3.5 w-3.5 text-white" />
 			</div>
-			<span class="text-sm font-semibold tracking-tight text-white">LightGCN</span>
+			<span class="text-sm font-semibold tracking-tight text-white">Resonate</span>
 		</a>
 
 		<!-- Nav links -->

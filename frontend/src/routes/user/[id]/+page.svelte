@@ -128,7 +128,7 @@
 	{#if recs.length > 0}
 		<ArtistRow
 			title="Made For You"
-			subtitle="Top picks from the LightGCN model"
+			subtitle="Top picks from Resonate"
 			items={recs}
 			showScore={true}
 			scoreMax={recScoreMax}
