@@ -7,12 +7,15 @@ import {
 	getSimilarArtists,
 	getListenerCountForArtist
 } from '$lib/server/recommendations';
+import { isArtistLiked } from '$lib/server/likes';
+import { auth } from '$lib/server/auth';
+import { getResonateUserIdx } from '$lib/server/session-user';
 import { getTopListenersForArtist } from '$lib/server/users';
 import { gradientFromMbid, titleCase, toArtist } from '$lib/api/recommendations';
 import type { Artist } from '$lib/types';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, request }) => {
 	const staticArtist = getArtistByMbid(params.mbid);
 
 	// Fetch MusicBrainz metadata + DB artist info in parallel
@@ -31,6 +34,11 @@ export const load: PageServerLoad = async ({ params }) => {
 		params.mbid;
 
 	const itemIdx = dbArtist?.item_idx ?? null;
+
+	const session = await auth.api.getSession({ headers: request.headers });
+	const resonateIdx = session?.user ? getResonateUserIdx(session.user) : null;
+	const likedByMe =
+		resonateIdx != null && itemIdx != null ? await isArtistLiked(resonateIdx, itemIdx) : false;
 
 	// Wikipedia bio, similar artists, and Last.fm art in parallel (image prefers Last.fm → wiki in return)
 	const [wikiResult, similarResult, lastfmResult] = await Promise.allSettled([
@@ -71,6 +79,8 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	return {
 		artist,
+		datasetItemIdx: itemIdx,
+		likedByMe,
 		imageUrl: lastfmImage ?? wikiData?.imageUrl ?? null,
 		extract: wikiData?.extract ?? null,
 		mbTags: mb?.tags ?? [],

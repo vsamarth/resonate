@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { activeUser } from '$lib/stores';
+	import { activeUser, likesRevision } from '$lib/stores';
 	import { fetchRecommendations } from '$lib/api/recommendations';
 	import { trendingArtists } from '$lib/data/artists';
 	import type { Recommendation } from '$lib/types';
@@ -30,6 +30,7 @@
 
 	$effect(() => {
 		const user = $activeUser;
+		$likesRevision;
 		if (!user) return;
 		recsLoading = true;
 		fetchRecommendations(user.userIdx, 10).then((items) => {

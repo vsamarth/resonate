@@ -4,7 +4,9 @@
 	import ArtistRow from '$lib/components/ArtistRow.svelte';
 	import ArtistImage from '$lib/components/ArtistImage.svelte';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
-	import { ArrowLeft, Users, Play, Calendar, MapPin } from 'lucide-svelte';
+	import { activeUser, bumpLikesRevision, toastStore } from '$lib/stores';
+	import { deleteArtistLike, postArtistLike } from '$lib/api/likes';
+	import { ArrowLeft, Users, Play, Calendar, MapPin, Heart } from 'lucide-svelte';
 
 	interface Props {
 		data: PageData;
@@ -13,6 +15,34 @@
 	let { data }: Props = $props();
 
 	const artist = $derived(data.artist);
+	const datasetItemIdx = $derived(data.datasetItemIdx);
+	let optimisticLiked = $state<boolean | null>(null);
+	let likeBusy = $state(false);
+
+	$effect(() => {
+		data.artist.mbid;
+		optimisticLiked = null;
+	});
+
+	const liked = $derived(optimisticLiked ?? data.likedByMe);
+
+	const canLike = $derived($activeUser && datasetItemIdx != null);
+
+	async function toggleLike() {
+		const u = $activeUser;
+		const idx = datasetItemIdx;
+		if (!u || idx == null || likeBusy) return;
+		likeBusy = true;
+		const next = !liked;
+		const ok = next ? await postArtistLike(u.userIdx, idx) : await deleteArtistLike(u.userIdx, idx);
+		likeBusy = false;
+		if (!ok) {
+			toastStore.show(next ? 'Could not save like' : 'Could not remove like');
+			return;
+		}
+		optimisticLiked = next;
+		bumpLikesRevision();
+	}
 	const imageUrl = $derived(data.imageUrl);
 	const extract = $derived(data.extract);
 	const mbTags = $derived(data.mbTags ?? []);
@@ -67,14 +97,32 @@
 		<!-- Gradient scrim so text is always readable -->
 		<div class="absolute inset-0 bg-gradient-to-t from-base via-base/60 to-transparent"></div>
 
-		<!-- Back button -->
-		<button
-			onclick={() => history.back()}
-			class="absolute left-6 top-6 flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 text-sm text-white backdrop-blur-sm hover:bg-black/60 transition-colors"
-		>
-			<ArrowLeft class="h-4 w-4" />
-			Back
-		</button>
+		<!-- Back + like -->
+		<div class="absolute left-6 top-6 right-6 flex items-center justify-between gap-3">
+			<button
+				onclick={() => history.back()}
+				class="flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 text-sm text-white backdrop-blur-sm hover:bg-black/60 transition-colors"
+			>
+				<ArrowLeft class="h-4 w-4" />
+				Back
+			</button>
+			{#if canLike}
+				<button
+					type="button"
+					disabled={likeBusy}
+					onclick={toggleLike}
+					class="flex items-center gap-2 rounded-full bg-black/40 px-3 py-1.5 text-sm text-white backdrop-blur-sm transition-colors hover:bg-black/60 disabled:opacity-50"
+					aria-pressed={liked}
+					aria-label={liked ? 'Unlike this artist' : 'Like this artist for recommendations'}
+				>
+					<Heart
+						class="h-4 w-4 {liked ? 'fill-rose-400 text-rose-400' : 'text-white'}"
+						strokeWidth={liked ? 0 : 2}
+					/>
+					{liked ? 'Liked' : 'Like'}
+				</button>
+			{/if}
+		</div>
 
 		<!-- Artist identity -->
 		<div class="absolute bottom-6 left-8 right-8">

@@ -8,6 +8,13 @@
       "when": 1774074726075,
       "tag": "0000_odd_winter_soldier",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1774077535173,
+      "tag": "0001_dear_serpent_society",
+      "breakpoints": true
     }
   ]
 }

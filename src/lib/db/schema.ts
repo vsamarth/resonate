@@ -59,3 +59,18 @@ export const trainEdges = pgTable(
 	},
 	(t) => [primaryKey({ columns: [t.userIdx, t.itemIdx] })]
 );
+
+/** Explicit likes (in-app) — steer recommendations via blended user embedding */
+export const userArtistLikes = pgTable(
+	'user_artist_likes',
+	{
+		userIdx: integer('user_idx')
+			.notNull()
+			.references(() => users.userIdx, { onDelete: 'cascade' }),
+		itemIdx: integer('item_idx')
+			.notNull()
+			.references(() => artists.itemIdx, { onDelete: 'cascade' }),
+		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
+	},
+	(t) => [primaryKey({ columns: [t.userIdx, t.itemIdx] })]
+);

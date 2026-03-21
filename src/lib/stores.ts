@@ -4,6 +4,13 @@ import type { User } from '$lib/types';
 /** Set by layout from DB default; updated when user switches in Navbar. */
 export const activeUser = writable<User | null>(null);
 
+/** Increment after like/unlike so home “Made For You” refetches with blended embeddings. */
+export const likesRevision = writable(0);
+
+export function bumpLikesRevision() {
+	likesRevision.update((n) => n + 1);
+}
+
 /** Simple toast notifications */
 let nextId = 0;
 const AUTO_DISMISS_MS = 3_500;
