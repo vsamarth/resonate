@@ -1,6 +1,7 @@
 import { getArtistByMbid } from '$lib/data/artists';
 import { getArtistData } from '$lib/api/wikipedia';
 import { getMbArtist } from '$lib/api/musicbrainz';
+import { fetchLastfmArtistImage } from '$lib/server/lastfm';
 import {
 	getArtistByMbid as getDbArtist,
 	getSimilarArtists,
@@ -38,6 +39,7 @@ export const load: PageServerLoad = async ({ params }) => {
 	]);
 
 	const wikiData = wikiResult.status === 'fulfilled' ? wikiResult.value : null;
+	const lastfmImage = await fetchLastfmArtistImage(params.mbid);
 	const modelSimilar =
 		similarResult.status === 'fulfilled'
 			? similarResult.value.map((r) => toArtist(r))
@@ -68,7 +70,7 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	return {
 		artist,
-		imageUrl: wikiData?.imageUrl ?? null,
+		imageUrl: lastfmImage ?? wikiData?.imageUrl ?? null,
 		extract: wikiData?.extract ?? null,
 		mbTags: mb?.tags ?? [],
 		mbFormed: mb?.formed ?? null,

@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { getArtistImage } from '$lib/api/wikipedia';
+	import { isPlaceholderArtistImageUrl } from '$lib/artist-image-url';
 
 	interface Props {
 		artistName: string;
+		/** MusicBrainz id — used to load art from Last.fm via `/api/artists/image` */
+		mbid?: string;
 		gradient: string;
 		/** If you already have the URL (e.g. from a page load), pass it directly */
 		preloadedUrl?: string | null;
@@ -13,6 +16,7 @@
 
 	let {
 		artistName,
+		mbid = undefined,
 		gradient,
 		preloadedUrl = undefined,
 		heightClass = 'h-44',
@@ -26,16 +30,45 @@
 	$effect(() => {
 		// If a preloaded URL was passed, use it immediately.
 		if (preloadedUrl !== undefined) {
-			imageUrl = preloadedUrl;
-			loaded = preloadedUrl != null;
+			const ok = preloadedUrl != null && !isPlaceholderArtistImageUrl(preloadedUrl);
+			imageUrl = ok ? preloadedUrl : null;
+			loaded = ok;
 			return;
 		}
-		// Otherwise lazy-fetch from Wikipedia on mount.
 		loaded = false;
 		errored = false;
-		getArtistImage(artistName).then((url) => {
-			imageUrl = url;
-		});
+		imageUrl = null;
+
+		let cancelled = false;
+
+		(async () => {
+			if (mbid?.trim()) {
+				try {
+					const r = await fetch(
+						`/api/artists/image?mbid=${encodeURIComponent(mbid.trim())}`
+					);
+					if (!cancelled && r.ok) {
+						const j = (await r.json()) as { url: string | null };
+						if (j.url && !isPlaceholderArtistImageUrl(j.url)) {
+							imageUrl = j.url;
+							return;
+						}
+					}
+				} catch {
+					/* fall through to Wikipedia */
+				}
+			}
+			if (!cancelled) {
+				const url = await getArtistImage(artistName);
+				if (!cancelled) {
+					imageUrl = url && !isPlaceholderArtistImageUrl(url) ? url : null;
+				}
+			}
+		})();
+
+		return () => {
+			cancelled = true;
+		};
 	});
 </script>
 

@@ -36,7 +36,6 @@
 		<UserAvatar {user} size="xl" />
 		<div>
 			<h1 class="text-4xl font-bold text-white">{user.displayName}</h1>
-			<p class="mt-1 font-mono text-sm text-text-secondary">sha1: {user.sha1}…</p>
 			<div class="mt-3 flex items-center gap-2">
 				<Music2 class="h-4 w-4 text-accent" />
 				<span class="text-sm text-text-secondary">

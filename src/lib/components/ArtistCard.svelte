@@ -38,6 +38,7 @@
 	<div class="relative overflow-hidden rounded-card transition-transform duration-200 group-hover:scale-[1.03]">
 		<ArtistImage
 			artistName={artist.name}
+			mbid={artist.mbid}
 			gradient={artist.gradient}
 			heightClass={artSizeClasses[size]}
 			rounded="rounded-card"

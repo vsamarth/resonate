@@ -10,6 +10,7 @@ export interface ArtistRow {
 	mbid: string;
 	name: string;
 	score: number;
+	[key: string]: unknown;
 }
 
 export interface ArtistInfo {
@@ -17,6 +18,7 @@ export interface ArtistInfo {
 	mbid: string;
 	name: string;
 	total_plays: number;
+	[key: string]: unknown;
 }
 
 /**

@@ -10,6 +10,18 @@
 
 	let { user, size = 'md', ringPct }: Props = $props();
 
+	let imgErrored = $state(false);
+
+	$effect(() => {
+		user.avatarUrl;
+		user.id;
+		imgErrored = false;
+	});
+
+	const showPhoto = $derived(
+		Boolean(user.avatarUrl?.trim()) && !imgErrored
+	);
+
 	// Generate a consistent hue from SHA1
 	function hueFromSha(sha: string): number {
 		let hash = 0;
@@ -63,15 +75,26 @@
 		</svg>
 	{/if}
 
-	<!-- Avatar circle -->
-	<div
-		class="flex items-center justify-center rounded-full font-semibold text-white {textMap[size]}"
-		style="
-			width: {px - (ringPct !== undefined ? strokeW * 2 + 4 : 0)}px;
-			height: {px - (ringPct !== undefined ? strokeW * 2 + 4 : 0)}px;
-			background: hsl({hue}, 60%, 35%);
-		"
-	>
-		{initials}
-	</div>
+	<!-- Avatar: photo when we have a URL, else initials -->
+	{#if showPhoto}
+		<img
+			src={user.avatarUrl}
+			alt=""
+			class="rounded-full object-cover {ringPct !== undefined ? 'ring-2 ring-base' : ''}"
+			style="width: {px - (ringPct !== undefined ? strokeW * 2 + 4 : 0)}px; height: {px - (ringPct !== undefined ? strokeW * 2 + 4 : 0)}px;"
+			referrerpolicy="no-referrer"
+			onerror={() => (imgErrored = true)}
+		/>
+	{:else}
+		<div
+			class="flex items-center justify-center rounded-full font-semibold text-white {textMap[size]}"
+			style="
+				width: {px - (ringPct !== undefined ? strokeW * 2 + 4 : 0)}px;
+				height: {px - (ringPct !== undefined ? strokeW * 2 + 4 : 0)}px;
+				background: hsl({hue}, 60%, 35%);
+			"
+		>
+			{initials}
+		</div>
+	{/if}
 </div>

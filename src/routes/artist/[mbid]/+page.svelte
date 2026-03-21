@@ -58,6 +58,7 @@
 	<div class="relative h-80 w-full overflow-hidden">
 		<ArtistImage
 			artistName={artist.name}
+			mbid={artist.mbid}
 			gradient={artist.gradient}
 			preloadedUrl={imageUrl}
 			heightClass="h-80"
@@ -203,7 +204,6 @@
 							<UserAvatar {user} size="sm" />
 							<div class="flex-1 min-w-0">
 								<p class="text-sm font-medium text-white">{user.displayName}</p>
-								<p class="text-xs text-text-secondary">sha1: {user.sha1}…</p>
 							</div>
 							<div class="text-right">
 								<p class="text-sm font-semibold text-white">{plays.toLocaleString()}</p>

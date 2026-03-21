@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { activeUser } from '$lib/stores';
+	import { activeUser, toastStore } from '$lib/stores';
 	import type { User, ListUser } from '$lib/types';
 	import UserAvatar from './UserAvatar.svelte';
+	import { impersonateAsUser } from '$lib/client/impersonate';
 	import { Home, Search, Music2, ChevronDown } from 'lucide-svelte';
 
 	interface Props {
@@ -24,11 +25,12 @@
 	}
 
 	async function selectUser(user: ListUser) {
-		const res = await fetch(`/api/users/${user.userIdx}`);
-		if (!res.ok) return;
-		const fullUser: User = await res.json();
-		activeUser.set(fullUser);
-		userMenuOpen = false;
+		try {
+			await impersonateAsUser(user.userIdx, user.displayName);
+			userMenuOpen = false;
+		} catch {
+			toastStore.show('Could not switch user');
+		}
 	}
 
 	const toUserLike = (u: ListUser): User => ({ ...u, topArtists: [] });
@@ -78,10 +80,9 @@
 				<UserAvatar user={$activeUser} size="sm" />
 				<div class="min-w-0 flex-1 text-left">
 					<p class="truncate text-sm font-medium text-white">{$activeUser.displayName}</p>
-					<p class="text-xs text-text-secondary">sha1: {$activeUser.sha1}…</p>
 				</div>
 			{:else}
-				<div class="h-8 w-8 rounded-full bg-white/10 shrink-0" />
+				<div class="h-8 w-8 rounded-full bg-white/10 shrink-0"></div>
 				<p class="text-sm text-text-secondary">Loading…</p>
 			{/if}
 			<ChevronDown
@@ -100,7 +101,6 @@
 						<UserAvatar user={toUserLike(user)} size="sm" />
 						<div class="min-w-0">
 							<p class="text-sm text-white">{user.displayName}</p>
-							<p class="text-xs text-text-secondary">sha1: {user.sha1}…</p>
 						</div>
 					</button>
 				{/each}

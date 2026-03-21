@@ -1,15 +1,21 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { activeUser, toastStore } from '$lib/stores';
 	import type { User, ListUser } from '$lib/types';
 	import UserAvatar from './UserAvatar.svelte';
-	import { Home, Search, Music2, ChevronDown, Check } from 'lucide-svelte';
+	import { authClient } from '$lib/auth-client';
+	import { impersonateAsUser } from '$lib/client/impersonate';
+	import { Home, Search, Music2, ChevronDown, Check, LogOut } from 'lucide-svelte';
 
 	interface Props {
 		users: ListUser[];
+		/** From root layout: DB down, empty DB, or ok */
+		userDataStatus?: 'ok' | 'no_users' | 'database_unavailable';
+		signedIn?: boolean;
 	}
 
-	let { users }: Props = $props();
+	let { users, userDataStatus = 'ok', signedIn = false }: Props = $props();
 
 	let userMenuOpen = $state(false);
 	let scrolled = $state(false);
@@ -36,15 +42,23 @@
 	}
 
 	async function selectUser(user: ListUser) {
-		const res = await fetch(`/api/users/${user.userIdx}`);
-		if (!res.ok) return;
-		const fullUser: User = await res.json();
-		activeUser.set(fullUser);
-		userMenuOpen = false;
-		toastStore.show(`Now listening as ${user.displayName}`);
+		try {
+			await impersonateAsUser(user.userIdx, user.displayName);
+			userMenuOpen = false;
+		} catch {
+			toastStore.show('Could not switch user');
+		}
 	}
 
-	// ListUser has displayName, sha1; UserAvatar only needs those (+ topArtists for type)
+	async function signOut() {
+		userMenuOpen = false;
+		await authClient.signOut();
+		activeUser.set(null);
+		await invalidateAll();
+		goto('/sign-in');
+	}
+
+	// ListUser has displayName, sha1 (for avatar hue); UserAvatar only needs those (+ topArtists for type)
 	const toUserLike = (u: ListUser): User => ({ ...u, topArtists: [] });
 </script>
 
@@ -84,6 +98,14 @@
 
 		<!-- User switcher -->
 		<div class="relative" data-user-menu>
+			{#if !signedIn}
+				<a
+					href="/sign-in"
+					class="rounded-xl px-3 py-1.5 text-sm font-medium text-accent hover:bg-white/5"
+				>
+					Sign in
+				</a>
+			{:else}
 			<button
 				class="flex items-center gap-2.5 rounded-xl px-3 py-1.5 transition-colors hover:bg-white/5"
 				onclick={(e) => { e.stopPropagation(); userMenuOpen = !userMenuOpen; }}
@@ -94,8 +116,18 @@
 					<div class="hidden min-w-0 text-left sm:block">
 						<p class="text-sm font-medium leading-tight text-white">{$activeUser.displayName}</p>
 					</div>
+				{:else if userDataStatus === 'database_unavailable'}
+					<div class="h-8 w-8 rounded-full bg-red-500/20 shrink-0"></div>
+					<div class="hidden sm:block">
+						<p class="text-sm text-amber-200/90">Database offline</p>
+					</div>
+				{:else if userDataStatus === 'no_users'}
+					<div class="h-8 w-8 rounded-full bg-white/10 shrink-0"></div>
+					<div class="hidden sm:block">
+						<p class="text-sm text-text-secondary">No users in DB</p>
+					</div>
 				{:else}
-					<div class="h-8 w-8 rounded-full bg-white/10 shrink-0" />
+					<div class="h-8 w-8 rounded-full bg-white/10 shrink-0"></div>
 					<div class="hidden sm:block">
 						<p class="text-sm text-text-secondary">Loading…</p>
 					</div>
@@ -121,7 +153,6 @@
 								<UserAvatar user={toUserLike(user)} size="sm" />
 								<div class="min-w-0 flex-1">
 									<p class="text-sm font-medium text-white">{user.displayName}</p>
-									<p class="truncate text-xs text-text-secondary">sha1: {user.sha1}…</p>
 								</div>
 								{#if $activeUser?.id === user.id}
 									<Check class="h-3.5 w-3.5 shrink-0 text-accent" />
@@ -129,7 +160,18 @@
 							</button>
 						{/each}
 					</div>
+					<div class="border-t border-white/5 p-1">
+						<button
+							type="button"
+							class="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-text-secondary transition-colors hover:bg-white/5 hover:text-white"
+							onclick={() => signOut()}
+						>
+							<LogOut class="h-3.5 w-3.5 shrink-0" />
+							Sign out
+						</button>
+					</div>
 				</div>
+			{/if}
 			{/if}
 		</div>
 	</div>

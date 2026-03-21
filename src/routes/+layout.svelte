@@ -7,21 +7,26 @@
 
 	interface Props {
 		children: Snippet;
-		data: { users: import('$lib/types').ListUser[]; defaultUser: import('$lib/types').User | null };
+		data: {
+			users: import('$lib/types').ListUser[];
+			defaultUser: import('$lib/types').User | null;
+			userDataStatus: import('./+layout.server').UserDataStatus;
+			signedIn: boolean;
+		};
 	}
 
 	let { children, data }: Props = $props();
 
-	// Hydrate active user from server default once
+	// Hydrate active user from server default once (signed-in sessions only)
 	$effect(() => {
-		if ($activeUser === null && data.defaultUser) {
+		if (data.signedIn && $activeUser === null && data.defaultUser) {
 			activeUser.set(data.defaultUser);
 		}
 	});
 </script>
 
 <div class="min-h-screen bg-base">
-	<Navbar users={data.users} />
+	<Navbar users={data.users} userDataStatus={data.userDataStatus} signedIn={data.signedIn} />
 	<main class="pt-14">
 		{@render children()}
 	</main>

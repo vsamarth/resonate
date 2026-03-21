@@ -144,7 +144,6 @@
 						<UserAvatar user={userForAvatar(user)} size="md" />
 						<div class="min-w-0 flex-1">
 							<p class="font-medium text-white">{user.displayName}</p>
-							<p class="text-sm text-text-secondary">sha1: {user.sha1}…</p>
 						</div>
 					</a>
 				{/each}

@@ -1,5 +1,7 @@
 import { customType, integer, primaryKey, text, timestamp, pgTable } from 'drizzle-orm/pg-core';
 
+export * from './auth-schema';
+
 // ---------------------------------------------------------------------------
 // pgvector custom column type
 // ---------------------------------------------------------------------------

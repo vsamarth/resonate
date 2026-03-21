@@ -28,6 +28,7 @@
     "vite": "^6.0.0"
   },
   "dependencies": {
+    "better-auth": "^1.5.5",
     "bits-ui": "^0.21.16",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.38.0",

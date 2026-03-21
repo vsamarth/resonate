@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { PageData } from './$types';
 	import { activeUser } from '$lib/stores';
 	import { fetchRecommendations } from '$lib/api/recommendations';
 	import { trendingArtists } from '$lib/data/artists';
@@ -7,6 +8,12 @@
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import Skeleton from '$lib/components/Skeleton.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
+
+	interface Props {
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
 
 	function getGreeting(): string {
 		const h = new Date().getHours();
@@ -94,6 +101,20 @@
 				/>
 			</section>
 		{/if}
+	{:else if data.userDataStatus === 'database_unavailable'}
+		<section class="mb-10 max-w-lg">
+			<EmptyState
+				title="Can’t load users"
+				description="PostgreSQL isn’t reachable. Start your database and set DATABASE_URL in .env (see .env.example)."
+			/>
+		</section>
+	{:else if data.userDataStatus === 'no_users'}
+		<section class="mb-10 max-w-lg">
+			<EmptyState
+				title="No users in the database"
+				description="Seed the dataset from the model/ folder — see model/README.md (e.g. uv run python scripts/seed_db.py)."
+			/>
+		</section>
 	{:else}
 		<!-- User loading skeleton -->
 		<div class="mb-10 flex items-center gap-4">

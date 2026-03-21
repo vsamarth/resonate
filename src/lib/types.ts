@@ -22,6 +22,7 @@ export interface User {
 	topArtists: UserTopArtist[];
 	/** Integer index into the Resonate embedding matrix (0 … n_users-1) */
 	userIdx: number;
+	avatarUrl?: string | null;
 }
 
 /** User list item from DB (for switcher/search). */
@@ -43,3 +44,6 @@ export interface UserRecommendations {
 	userId: string;
 	items: Recommendation[];
 }
+
+/** Root layout: Postgres reachable and seeded vs not */
+export type UserDataStatus = 'ok' | 'no_users' | 'database_unavailable';

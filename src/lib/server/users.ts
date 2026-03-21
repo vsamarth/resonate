@@ -13,12 +13,22 @@ interface UserRow {
 	sha1: string;
 	display_name: string | null;
 	avatar_url: string | null;
+	[key: string]: unknown;
 }
 
 interface ArtistRow {
 	item_idx: number;
 	mbid: string;
 	name: string;
+	[key: string]: unknown;
+}
+
+/** Smallest `user_idx` in `users`, or null if the table is empty. */
+export async function getFirstUserIdx(): Promise<number | null> {
+	const rows = await db.execute<{ user_idx: number }>(sql`
+		SELECT user_idx FROM users ORDER BY user_idx ASC LIMIT 1
+	`);
+	return rows.rows[0]?.user_idx ?? null;
 }
 
 /** Users that have a profile (display_name), for switcher and search. */
@@ -71,6 +81,7 @@ export async function getUserWithTopArtists(userIdx: number): Promise<User | nul
 		sha1: u.sha1,
 		displayName: u.display_name ?? `User #${u.user_idx}`,
 		userIdx: u.user_idx,
+		avatarUrl: u.avatar_url,
 		topArtists
 	};
 }
@@ -82,6 +93,7 @@ function toMinimalUser(r: UserRow): User {
 		sha1: r.sha1,
 		displayName: r.display_name ?? `User #${r.user_idx}`,
 		userIdx: r.user_idx,
+		avatarUrl: r.avatar_url,
 		topArtists: []
 	};
 }
