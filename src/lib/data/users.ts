@@ -1,6 +1,6 @@
 /**
  * Users are loaded from the database via:
- * - Layout: getUsersWithProfiles(), getUserWithTopArtists(0) for default
+ * - Layout: getUsersWithProfiles(20), getUserWithTopArtists(0) for default
  * - API: GET /api/users, GET /api/users/[userIdx]
  * - Server: $lib/server/users.ts
  *

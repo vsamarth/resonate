@@ -33,7 +33,7 @@ export async function getFirstUserIdx(): Promise<number | null> {
 }
 
 /** Users that have a profile (display_name), for switcher and search. */
-export async function getUsersWithProfiles(limit = 100): Promise<ListUser[]> {
+export async function getUsersWithProfiles(limit = 20): Promise<ListUser[]> {
 	const rows = await db.execute<UserRow>(sql`
 		SELECT user_idx, sha1, display_name, avatar_url
 		FROM users

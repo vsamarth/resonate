@@ -50,7 +50,7 @@ export const load: LayoutServerLoad = async (event) => {
 			};
 		}
 
-		const users = await getUsersWithProfiles(100);
+		const users = await getUsersWithProfiles(20);
 		const resonateIdx = getResonateUserIdx(session.user);
 
 		let defaultUser =

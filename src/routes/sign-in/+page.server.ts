@@ -19,7 +19,7 @@ export const load: PageServerLoad = async (event) => {
 		throw redirect(303, '/');
 	}
 	try {
-		const users = await getUsersWithProfiles(100);
+		const users = await getUsersWithProfiles(20);
 		const userDataStatus = users.length > 0 ? ('ok' as const) : ('no_users' as const);
 		return { users, userDataStatus };
 	} catch {
