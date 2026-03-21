@@ -115,6 +115,25 @@
 				description="Seed the dataset from the model/ folder — see model/README.md (e.g. uv run python scripts/seed_db.py)."
 			/>
 		</section>
+	{:else if !data.signedIn && data.guestDiscover}
+		<div class="mb-10">
+			<h1 class="text-3xl font-bold text-white">Discover new artists</h1>
+			<p class="mt-2 max-w-xl text-sm text-text-secondary">
+				Sign in for personalized recommendations based on your listening history.
+			</p>
+		</div>
+		<ArtistRow
+			title="Popular artists"
+			subtitle="Most played in the dataset"
+			items={data.guestDiscover.popular}
+			cardSize="md"
+		/>
+		<ArtistRow
+			title="Random picks"
+			subtitle="A fresh shuffle — changes daily"
+			items={data.guestDiscover.random}
+			cardSize="md"
+		/>
 	{:else}
 		<!-- User loading skeleton -->
 		<div class="mb-10 flex items-center gap-4">
@@ -138,11 +157,13 @@
 		</section>
 	{/if}
 
-	<!-- Trending -->
-	<ArtistRow
-		title="Trending on Last.fm"
-		subtitle="Most played across the dataset"
-		items={trendingArtists}
-		cardSize="md"
-	/>
+	<!-- Trending (signed-in home only; guests already see popular + random above) -->
+	{#if data.signedIn}
+		<ArtistRow
+			title="Trending on Last.fm"
+			subtitle="Most played across the dataset"
+			items={trendingArtists}
+			cardSize="md"
+		/>
+	{/if}
 </div>

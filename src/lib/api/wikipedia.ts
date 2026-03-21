@@ -1,5 +1,14 @@
 const cache = new Map<string, { imageUrl: string | null; extract: string | null }>();
 
+/** Wikimedia requires a descriptive UA for API clients; Node’s default is often throttled or blocked. */
+function wikiRequestInit(): RequestInit {
+	if (typeof window !== 'undefined') return {};
+	const ua =
+		process.env.WIKIPEDIA_USER_AGENT?.trim() ||
+		`resonate-frontend/0.1.0 (${process.env.BETTER_AUTH_URL ?? 'http://localhost:5173'})`;
+	return { headers: { 'User-Agent': ua } };
+}
+
 interface WikiResponse {
 	query: {
 		pages: Record<string, {
@@ -26,7 +35,7 @@ async function fetchWiki(name: string): Promise<{ imageUrl: string | null; extra
 	});
 
 	try {
-		const res = await fetch(`${base}?${params}`);
+		const res = await fetch(`${base}?${params}`, wikiRequestInit());
 		if (!res.ok) throw new Error(`Wikipedia API ${res.status}`);
 		const data: WikiResponse = await res.json();
 		const pages = Object.values(data.query.pages);

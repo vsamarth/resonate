@@ -32,14 +32,15 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	const itemIdx = dbArtist?.item_idx ?? null;
 
-	// Fetch Wikipedia bio + similar artists in parallel
-	const [wikiResult, similarResult] = await Promise.allSettled([
+	// Wikipedia bio, similar artists, and Last.fm art in parallel (image prefers Last.fm → wiki in return)
+	const [wikiResult, similarResult, lastfmResult] = await Promise.allSettled([
 		getArtistData(artistName),
-		itemIdx !== null ? getSimilarArtists(itemIdx, 8) : Promise.resolve([])
+		itemIdx !== null ? getSimilarArtists(itemIdx, 8) : Promise.resolve([]),
+		fetchLastfmArtistImage(params.mbid)
 	]);
 
 	const wikiData = wikiResult.status === 'fulfilled' ? wikiResult.value : null;
-	const lastfmImage = await fetchLastfmArtistImage(params.mbid);
+	const lastfmImage = lastfmResult.status === 'fulfilled' ? lastfmResult.value : null;
 	const modelSimilar =
 		similarResult.status === 'fulfilled'
 			? similarResult.value.map((r) => toArtist(r))

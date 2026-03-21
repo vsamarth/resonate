@@ -1,10 +1,11 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { fetchLastfmArtistImage } from '$lib/server/lastfm';
+import { resolveArtistImageUrl } from '$lib/server/artist-image';
 
-/** JSON `{ url: string | null }` for client-side artist cards (Last.fm, keyed by MBID). */
+/** JSON `{ url }` — Last.fm by MBID, then Wikipedia by optional `name`. */
 export const GET: RequestHandler = async ({ url }) => {
 	const mbid = url.searchParams.get('mbid');
 	if (!mbid) return json({ url: null });
-	const imageUrl = await fetchLastfmArtistImage(mbid);
+	const name = url.searchParams.get('name');
+	const imageUrl = await resolveArtistImageUrl(mbid, name);
 	return json({ url: imageUrl });
 };

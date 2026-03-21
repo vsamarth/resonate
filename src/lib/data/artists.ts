@@ -298,3 +298,36 @@ export function getSimilarArtists(mbid: string): Artist[] {
 export const trendingArtists = [...artists]
 	.sort((a, b) => b.totalPlays - a.totalPlays)
 	.slice(0, 10);
+
+function mulberry32(seed: number) {
+	return function () {
+		let t = (seed += 0x6d2b79f5);
+		t = Math.imul(t ^ (t >>> 15), t | 1);
+		t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+		return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+	};
+}
+
+function shuffleWithSeed<T>(array: T[], seed: number): T[] {
+	const rng = mulberry32(seed);
+	const out = [...array];
+	for (let i = out.length - 1; i > 0; i--) {
+		const j = Math.floor(rng() * (i + 1));
+		[out[i], out[j]] = [out[j], out[i]];
+	}
+	return out;
+}
+
+function utcDaySeed(): number {
+	const d = new Date();
+	return d.getUTCFullYear() * 10_000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
+}
+
+/** Top by plays plus a daily-seeded random strip (disjoint from popular) for signed-out home. */
+export function getGuestDiscoverArtists(): { popular: Artist[]; random: Artist[] } {
+	const popular = [...artists].sort((a, b) => b.totalPlays - a.totalPlays).slice(0, 10);
+	const popularMbids = new Set(popular.map((a) => a.mbid));
+	const pool = artists.filter((a) => !popularMbids.has(a.mbid));
+	const random = shuffleWithSeed(pool, utcDaySeed()).slice(0, 10);
+	return { popular, random };
+}

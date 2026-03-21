@@ -31,9 +31,12 @@
 		// If a preloaded URL was passed, use it immediately.
 		if (preloadedUrl !== undefined) {
 			const ok = preloadedUrl != null && !isPlaceholderArtistImageUrl(preloadedUrl);
-			imageUrl = ok ? preloadedUrl : null;
-			loaded = ok;
-			return;
+			if (ok) {
+				imageUrl = preloadedUrl;
+				loaded = true;
+				return;
+			}
+			// Server had no art — still try Last.fm → Wikipedia client-side
 		}
 		loaded = false;
 		errored = false;
@@ -44,9 +47,9 @@
 		(async () => {
 			if (mbid?.trim()) {
 				try {
-					const r = await fetch(
-						`/api/artists/image?mbid=${encodeURIComponent(mbid.trim())}`
-					);
+					const q = new URLSearchParams({ mbid: mbid.trim() });
+					if (artistName.trim()) q.set('name', artistName.trim());
+					const r = await fetch(`/api/artists/image?${q}`);
 					if (!cancelled && r.ok) {
 						const j = (await r.json()) as { url: string | null };
 						if (j.url && !isPlaceholderArtistImageUrl(j.url)) {

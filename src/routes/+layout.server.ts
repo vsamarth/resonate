@@ -10,16 +10,22 @@ import type { LayoutServerLoad } from './$types';
 
 export type UserDataStatus = 'ok' | 'no_users' | 'database_unavailable';
 
+/** Routes that work without Better Auth (browse before sign-in). */
+function isPublicPath(pathname: string): boolean {
+	if (pathname.startsWith('/api/')) return true;
+	if (pathname.includes('.')) return true;
+	if (pathname === '/sign-in') return true;
+	if (pathname === '/') return true;
+	if (pathname.startsWith('/search')) return true;
+	if (pathname.startsWith('/artist/')) return true;
+	return false;
+}
+
 export const load: LayoutServerLoad = async (event) => {
 	const session = await auth.api.getSession({ headers: event.request.headers });
 	const path = event.url.pathname;
 
-	if (
-		!session &&
-		path !== '/sign-in' &&
-		!path.startsWith('/api/') &&
-		!path.includes('.')
-	) {
+	if (!session?.user && !isPublicPath(path)) {
 		const q = event.url.searchParams.get('redirect');
 		const next = q && q.startsWith('/') ? q : path;
 		throw redirect(303, `/sign-in?redirect=${encodeURIComponent(next === '/sign-in' ? '/' : next)}`);
