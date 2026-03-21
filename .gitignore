@@ -1,5 +1,8 @@
 node_modules
 
+# Dataset / artifacts (large; keep local or fetch separately)
+/data/
+
 # Output
 .output
 .vercel
