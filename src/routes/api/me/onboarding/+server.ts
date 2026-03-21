@@ -53,7 +53,7 @@ export const POST: RequestHandler = async (event) => {
 		console.error('[onboarding] save failed', e);
 		throw error(
 			500,
-			'Could not save picks. Run `npm run db:migrate` so `auth_artist_likes` / `user_artist_likes` exist.'
+			'Could not save picks. Run `bun run db:migrate` so `auth_artist_likes` / `user_artist_likes` exist.'
 		);
 	}
 
