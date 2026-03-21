@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { getSimilarArtists } from '$lib/data/artists';
+	import { formatArtistName } from '$lib/format-artist-name';
 	import ArtistRow from '$lib/components/ArtistRow.svelte';
 	import ArtistImage from '$lib/components/ArtistImage.svelte';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
@@ -26,15 +27,18 @@
 
 	const liked = $derived(optimisticLiked ?? data.likedByMe);
 
-	const canLike = $derived($activeUser && datasetItemIdx != null);
+	const canLike = $derived(
+		$activeUser && $activeUser.userIdx != null && datasetItemIdx != null
+	);
 
 	async function toggleLike() {
 		const u = $activeUser;
 		const idx = datasetItemIdx;
-		if (!u || idx == null || likeBusy) return;
+		const userIdx = u?.userIdx;
+		if (!u || userIdx == null || idx == null || likeBusy) return;
 		likeBusy = true;
 		const next = !liked;
-		const ok = next ? await postArtistLike(u.userIdx, idx) : await deleteArtistLike(u.userIdx, idx);
+		const ok = next ? await postArtistLike(userIdx, idx) : await deleteArtistLike(userIdx, idx);
 		likeBusy = false;
 		if (!ok) {
 			toastStore.show(next ? 'Could not save like' : 'Could not remove like');
@@ -141,7 +145,7 @@
 					{/if}
 				</div>
 			{/if}
-			<h1 class="text-5xl font-bold text-white drop-shadow-lg">{artist.name}</h1>
+			<h1 class="text-5xl font-bold text-white drop-shadow-lg">{formatArtistName(artist.name)}</h1>
 		</div>
 	</div>
 
@@ -193,7 +197,7 @@
 				<h2 class="mb-3 text-xl font-semibold text-white">About</h2>
 				<p class="text-sm leading-relaxed text-text-secondary">{extract}</p>
 				<a
-					href="https://en.wikipedia.org/wiki/{encodeURIComponent(artist.name)}"
+					href="https://en.wikipedia.org/wiki/{encodeURIComponent(formatArtistName(artist.name))}"
 					target="_blank"
 					rel="noopener noreferrer"
 					class="mt-2 inline-flex items-center gap-1 text-xs text-accent hover:underline"

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { formatArtistName } from '$lib/format-artist-name';
 	import ArtistRow from '$lib/components/ArtistRow.svelte';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import { ArrowLeft, Music2 } from 'lucide-svelte';
@@ -73,11 +74,14 @@
 								stroke-dasharray={circ} stroke-dashoffset={dashOffset} stroke-linecap="round" />
 						</svg>
 						<div class="absolute inset-[5px] flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-br {ta.artist.gradient} transition-transform duration-200 group-hover:scale-105">
-							<span class="text-2xl font-bold text-white/80 select-none">{ta.artist.name[0]}</span>
+							<span class="text-2xl font-bold text-white/80 select-none"
+								>{formatArtistName(ta.artist.name)[0]}</span>
 						</div>
 					</div>
 					<div class="text-center w-20">
-						<p class="text-xs font-medium text-white leading-tight line-clamp-2">{ta.artist.name}</p>
+						<p class="text-xs font-medium text-white leading-tight line-clamp-2">
+							{formatArtistName(ta.artist.name)}
+						</p>
 						<p class="text-xs text-text-secondary mt-0.5">{formatPlays(ta.plays)}</p>
 					</div>
 				</a>
@@ -107,9 +111,11 @@
 									<div
 										class="h-9 w-9 shrink-0 rounded-lg bg-gradient-to-br {ta.artist.gradient} flex items-center justify-center text-sm font-bold text-white/70"
 									>
-										{ta.artist.name[0]}
+										{formatArtistName(ta.artist.name)[0]}
 									</div>
-									<span class="font-medium text-white group-hover:text-accent transition-colors">{ta.artist.name}</span>
+									<span class="font-medium text-white group-hover:text-accent transition-colors">
+										{formatArtistName(ta.artist.name)}
+									</span>
 								</a>
 							</td>
 							<td class="px-4 py-3 text-text-secondary">{ta.artist.genre}</td>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatArtistName } from '$lib/format-artist-name';
 	import type { Artist } from '$lib/types';
 	import ScoreBar from './ScoreBar.svelte';
 	import ArtistImage from './ArtistImage.svelte';
@@ -53,7 +54,7 @@
 
 	<!-- Info -->
 	<div class="mt-2 px-0.5">
-		<p class="truncate text-sm font-medium text-white leading-tight">{artist.name}</p>
+		<p class="truncate text-sm font-medium text-white leading-tight">{formatArtistName(artist.name)}</p>
 		{#if showCategory}
 			{#if reason}
 				<p class="mt-0.5 truncate text-xs text-text-secondary">{reason}</p>

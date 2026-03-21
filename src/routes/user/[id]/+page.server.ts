@@ -10,8 +10,10 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	const user = await getUserWithTopArtists(userIdx);
 	if (!user) throw error(404, 'User not found');
+	const datasetIdx = user.userIdx;
+	if (datasetIdx == null) throw error(404, 'User not found');
 
-	const recRows = await getRecommendations(user.userIdx, 10);
+	const recRows = await getRecommendations(datasetIdx, 10);
 	const recommendations = recRows.map((r) => ({
 		artist: toArtist(r),
 		score: r.score

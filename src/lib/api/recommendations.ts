@@ -67,7 +67,25 @@ export function toArtist(rec: ApiRec): Artist {
  *  Returns an empty array on any error (server error, out-of-range, etc.). */
 export async function fetchRecommendations(userIdx: number, k = 10): Promise<Recommendation[]> {
 	try {
-		const res = await fetch(`${BASE}/recommendations/${userIdx}?k=${k}`);
+		const res = await fetch(`${BASE}/recommendations/${userIdx}?k=${k}`, { cache: 'no-store' });
+		if (!res.ok) return [];
+		const data: { items: ApiRec[] } = await res.json();
+		return data.items.map((r) => ({
+			artist: toArtist(r),
+			score: r.score,
+		}));
+	} catch {
+		return [];
+	}
+}
+
+/** Session cookie — email-only accounts with `auth_artist_likes` cold start */
+export async function fetchRecommendationsForMe(k = 10): Promise<Recommendation[]> {
+	try {
+		const res = await fetch(`${BASE}/recommendations/me?k=${k}`, {
+			credentials: 'include',
+			cache: 'no-store'
+		});
 		if (!res.ok) return [];
 		const data: { items: ApiRec[] } = await res.json();
 		return data.items.map((r) => ({

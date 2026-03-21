@@ -1,6 +1,6 @@
 import { and, desc, eq } from 'drizzle-orm';
 import { db } from '$lib/db';
-import { artists, userArtistLikes } from '$lib/db/schema';
+import { artists, authArtistLikes, userArtistLikes } from '$lib/db/schema';
 
 export interface LikedArtistRow {
 	itemIdx: number;
@@ -19,6 +19,20 @@ export async function getUserLikes(userIdx: number): Promise<LikedArtistRow[]> {
 		.innerJoin(artists, eq(userArtistLikes.itemIdx, artists.itemIdx))
 		.where(eq(userArtistLikes.userIdx, userIdx))
 		.orderBy(desc(userArtistLikes.createdAt));
+	return rows;
+}
+
+export async function getAuthUserLikes(userId: string): Promise<LikedArtistRow[]> {
+	const rows = await db
+		.select({
+			itemIdx: artists.itemIdx,
+			mbid: artists.mbid,
+			name: artists.name
+		})
+		.from(authArtistLikes)
+		.innerJoin(artists, eq(authArtistLikes.itemIdx, artists.itemIdx))
+		.where(eq(authArtistLikes.userId, userId))
+		.orderBy(desc(authArtistLikes.createdAt));
 	return rows;
 }
 

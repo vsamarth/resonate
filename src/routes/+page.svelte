@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { activeUser, likesRevision } from '$lib/stores';
-	import { fetchRecommendations } from '$lib/api/recommendations';
+	import { fetchRecommendations, fetchRecommendationsForMe } from '$lib/api/recommendations';
 	import { trendingArtists } from '$lib/data/artists';
 	import type { Recommendation } from '$lib/types';
 	import ArtistRow from '$lib/components/ArtistRow.svelte';
@@ -23,6 +23,10 @@
 	}
 
 	const topArtists = $derived($activeUser?.topArtists?.map((ta) => ta.artist) ?? []);
+	const hasDatasetProfile = $derived($activeUser?.userIdx != null);
+	const profileSeeAllHref = $derived(
+		hasDatasetProfile && $activeUser ? `/user/${$activeUser.userIdx}` : undefined
+	);
 
 	let recs = $state<Recommendation[]>([]);
 	let recsLoading = $state(true);
@@ -33,10 +37,17 @@
 		$likesRevision;
 		if (!user) return;
 		recsLoading = true;
-		fetchRecommendations(user.userIdx, 10).then((items) => {
-			recs = items;
-			recsLoading = false;
-		});
+		if (user.userIdx != null) {
+			fetchRecommendations(user.userIdx, 10).then((items) => {
+				recs = items;
+				recsLoading = false;
+			});
+		} else {
+			fetchRecommendationsForMe(10).then((items) => {
+				recs = items;
+				recsLoading = false;
+			});
+		}
 	});
 </script>
 
@@ -55,9 +66,9 @@
 		{#if topArtists.length > 0}
 			<ArtistRow
 				title="Your Top Artists"
-				subtitle="Based on your listening history"
+				subtitle="From your plays and artists you’ve liked"
 				items={topArtists}
-				seeAllHref="/user/{$activeUser.id}"
+				seeAllHref={profileSeeAllHref}
 				cardSize="md"
 			/>
 		{:else}
@@ -65,7 +76,9 @@
 				<h2 class="mb-4 text-xl font-semibold text-white">Your Top Artists</h2>
 				<EmptyState
 					title="No listening history yet"
-					description="Your top artists will appear here once you have some plays."
+					description={hasDatasetProfile
+						? 'Your top artists will appear here once you have some plays.'
+						: 'Optional: choose a demo profile from the user menu to see dataset listening history.'}
 				/>
 			</section>
 		{/if}
@@ -87,7 +100,7 @@
 				showScore={true}
 				showCategory={false}
 				scoreMax={recScoreMax}
-				seeAllHref="/user/{$activeUser.id}"
+				seeAllHref={profileSeeAllHref}
 				cardSize="md"
 			/>
 		{:else}

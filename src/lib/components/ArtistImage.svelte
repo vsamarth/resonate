@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { getArtistImage } from '$lib/api/wikipedia';
 	import { isPlaceholderArtistImageUrl } from '$lib/artist-image-url';
+	import { formatArtistName } from '$lib/format-artist-name';
 
 	interface Props {
 		artistName: string;
@@ -22,6 +23,8 @@
 		heightClass = 'h-44',
 		rounded = 'rounded-card'
 	}: Props = $props();
+
+	const displayName = $derived(formatArtistName(artistName));
 
 	let imageUrl = $state<string | null>(null);
 	let loaded = $state(false);
@@ -81,14 +84,14 @@
 		class="absolute inset-0 flex items-center justify-center text-6xl font-bold text-white/10 select-none transition-opacity duration-500
 			{loaded && !errored ? 'opacity-0' : 'opacity-100'}"
 	>
-		{artistName[0].toUpperCase()}
+		{displayName[0]?.toUpperCase() ?? ''}
 	</div>
 
 	<!-- Real image (fades in once loaded) -->
 	{#if imageUrl && !errored}
 		<img
 			src={imageUrl}
-			alt={artistName}
+			alt={displayName}
 			loading="lazy"
 			class="absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-500
 				{loaded ? 'opacity-100' : 'opacity-0'}"

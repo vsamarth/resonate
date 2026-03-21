@@ -1,4 +1,5 @@
 import { customType, integer, primaryKey, text, timestamp, pgTable } from 'drizzle-orm/pg-core';
+import { user } from './auth-schema';
 
 export * from './auth-schema';
 
@@ -73,4 +74,19 @@ export const userArtistLikes = pgTable(
 		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
 	},
 	(t) => [primaryKey({ columns: [t.userIdx, t.itemIdx] })]
+);
+
+/** Likes for Better Auth users (no dataset `user_idx`) — cold-start recommendations */
+export const authArtistLikes = pgTable(
+	'auth_artist_likes',
+	{
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		itemIdx: integer('item_idx')
+			.notNull()
+			.references(() => artists.itemIdx, { onDelete: 'cascade' }),
+		createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
+	},
+	(t) => [primaryKey({ columns: [t.userId, t.itemIdx] })]
 );

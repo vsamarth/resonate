@@ -31,7 +31,7 @@
 		return Math.abs(hash) % 360;
 	}
 
-	const hue = $derived(hueFromSha(user.sha1));
+	const hue = $derived(hueFromSha(user.sha1 || user.id));
 	const initials = $derived(user.displayName.slice(0, 2).toUpperCase());
 
 	const pxMap = { sm: 32, md: 40, lg: 56, xl: 80 };

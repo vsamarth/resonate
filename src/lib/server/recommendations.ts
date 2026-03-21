@@ -4,7 +4,7 @@
  */
 import { eq, sql } from 'drizzle-orm';
 import { db } from '$lib/db';
-import { artists, userArtistLikes, users } from '$lib/db/schema';
+import { artists, authArtistLikes, userArtistLikes, users } from '$lib/db/schema';
 
 export interface ArtistRow {
 	item_idx: number;
@@ -49,6 +49,57 @@ function vectorLiteralSql(vec: number[]) {
 	return sql.raw(`'${s}'::vector(64)`);
 }
 
+function meanNormalize(embeddings: number[][]): number[] {
+	if (embeddings.length === 0) return [];
+	const dim = embeddings[0]!.length;
+	const mean = new Array(dim).fill(0);
+	for (const e of embeddings) {
+		for (let i = 0; i < dim; i++) mean[i]! += e[i]!;
+	}
+	const n = embeddings.length;
+	for (let i = 0; i < dim; i++) mean[i]! /= n;
+	const norm = Math.sqrt(mean.reduce((s, v) => s + v * v, 0));
+	if (norm < 1e-12) return mean;
+	return mean.map((v) => v / norm);
+}
+
+/**
+ * Recommendations for Better Auth users: query vector = normalized mean of liked artist embeddings.
+ * Excludes liked items only (no train_edges).
+ */
+export async function getRecommendationsForAuthUser(authUserId: string, k = 10): Promise<ArtistRow[]> {
+	const likedRows = await db
+		.select({ embedding: artists.embedding, itemIdx: artists.itemIdx })
+		.from(authArtistLikes)
+		.innerJoin(artists, eq(authArtistLikes.itemIdx, artists.itemIdx))
+		.where(eq(authArtistLikes.userId, authUserId));
+	if (likedRows.length === 0) return [];
+
+	const uEff = meanNormalize(likedRows.map((r) => r.embedding));
+	const vecLit = vectorLiteralSql(uEff);
+
+	// Correlated NOT EXISTS is reliable; dynamic NOT IN (...) via sql.join can mis-compile in some drivers.
+	const rows = await db.execute<ArtistRow>(sql`
+		SELECT
+			a.item_idx,
+			a.mbid,
+			a.name,
+			-(a.embedding <#> u.embedding) AS score
+		FROM artists a
+		CROSS JOIN (SELECT ${vecLit} AS embedding) u
+		WHERE NOT EXISTS (
+			SELECT 1 FROM auth_artist_likes al
+			WHERE al.user_id = ${authUserId} AND al.item_idx = a.item_idx
+		)
+		ORDER BY a.embedding <#> u.embedding
+		LIMIT ${k}
+	`);
+	return rows.rows.map((r) => ({
+		...r,
+		score: typeof r.score === 'string' ? parseFloat(r.score) : r.score
+	}));
+}
+
 /**
  * Top-k artist recommendations for a user using dot-product similarity against a
  * blended query vector (dataset user embedding + mean of liked artists), with
@@ -91,7 +142,10 @@ export async function getRecommendations(userIdx: number, k = 10): Promise<Artis
 		ORDER BY a.embedding <#> u.embedding
 		LIMIT ${k}
 	`);
-	return rows.rows;
+	return rows.rows.map((r) => ({
+		...r,
+		score: typeof r.score === 'string' ? parseFloat(r.score) : r.score
+	}));
 }
 
 /**

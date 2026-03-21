@@ -5,6 +5,7 @@ import { sql } from 'drizzle-orm';
 import { db } from '$lib/db';
 import { toArtist } from '$lib/api/recommendations';
 import type { User, UserTopArtist, ListUser } from '$lib/types';
+import { getUserLikes, type LikedArtistRow } from '$lib/server/likes';
 
 export type { ListUser };
 
@@ -49,7 +50,27 @@ export async function getUsersWithProfiles(limit = 100): Promise<ListUser[]> {
 	}));
 }
 
-/** Full user with top artists (from train_edges), ordered by play count. */
+const MAX_TOP_ARTISTS_ROW = 32;
+
+/** Listening history first, then liked artists (most recent like first), deduped by mbid. */
+export function mergeListeningAndLikedTopArtists(
+	listening: UserTopArtist[],
+	liked: LikedArtistRow[]
+): UserTopArtist[] {
+	const seen = new Set(listening.map((t) => t.artist.mbid));
+	const merged = [...listening];
+	for (const r of liked) {
+		if (seen.has(r.mbid)) continue;
+		seen.add(r.mbid);
+		merged.push({
+			artist: toArtist({ item_idx: r.itemIdx, mbid: r.mbid, name: r.name, score: 1 }),
+			plays: 0
+		});
+	}
+	return merged.slice(0, MAX_TOP_ARTISTS_ROW);
+}
+
+/** Full user with top artists (train_edges + user_artist_likes). */
 export async function getUserWithTopArtists(userIdx: number): Promise<User | null> {
 	const userRows = await db.execute<UserRow>(sql`
 		SELECT user_idx, sha1, display_name, avatar_url
@@ -71,10 +92,13 @@ export async function getUserWithTopArtists(userIdx: number): Promise<User | nul
 		LIMIT 20
 	`);
 
-	const topArtists: UserTopArtist[] = artistRows.rows.map((r) => ({
+	const listeningTop: UserTopArtist[] = artistRows.rows.map((r) => ({
 		artist: toArtist({ item_idx: r.item_idx, mbid: r.mbid, name: r.name, score: 1 }),
 		plays: r.plays
 	}));
+
+	const likedRows = await getUserLikes(userIdx);
+	const topArtists = mergeListeningAndLikedTopArtists(listeningTop, likedRows);
 
 	return {
 		id: String(u.user_idx),

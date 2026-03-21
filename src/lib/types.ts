@@ -20,8 +20,8 @@ export interface User {
 	sha1: string;
 	displayName: string;
 	topArtists: UserTopArtist[];
-	/** Integer index into the Resonate embedding matrix (0 … n_users-1) */
-	userIdx: number;
+	/** Dataset user index; null when signed in with email only until a demo profile is chosen */
+	userIdx: number | null;
 	avatarUrl?: string | null;
 }
 
