@@ -91,16 +91,6 @@ bun install
 bun run dev
 ```
 
-## Demo / Dataset Profiles
-
-The app’s dataset demo sign-in uses stable synthetic emails:
-
-- `profile+{userIdx}@example.com`
-
-When you pick a dataset profile, the server signs in via `better-auth`. If the account does not yet exist, it creates it using the dataset user’s stored display name and avatar (server-side), and associates the account with the dataset `user_idx` using the `resonateUserIdx` field.
-
-Make sure `RESONATE_IMPERSONATE_PASSWORD` is set (it is used for these demo accounts).
-
 ## Onboarding
 
 For newly created / low-activity accounts, the UI shows an onboarding modal to “Pick a few artists you like”.
