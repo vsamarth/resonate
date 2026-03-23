@@ -23,9 +23,7 @@ Resonate is a full-stack SvelteKit app that powers personalized music-artist dis
 
 ## Live Demo
 
-If you have a public deployment, add it here (recommended for Svelte repo submissions), for example:
-
-- https://your-demo-url.com
+- https://resonate-recommendations.vercel.app/sign-in
 
 ## Getting Started
 
