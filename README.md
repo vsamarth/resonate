@@ -139,28 +139,7 @@ See `.env.example`. Key variables:
 - `LASTFM_API_KEY` (artist imagery)
 - Optional: `WIKIPEDIA_USER_AGENT`
 
-## API Endpoints (Server)
-
-Some commonly used routes:
-
-- `GET /api/recommendations/me?k=10` (session cookie based, email-only accounts)
-- `GET /api/recommendations/[userIdx]?k=10` (dataset profiles)
-- `POST /api/me/onboarding` (save onboarding likes)
-- `GET /api/artists/by-mbid/[mbid]`
-- `GET /api/similar-artists/[itemIdx]?k=6`
-- `GET /api/users/[userIdx]/likes`
-- `POST /api/users/[userIdx]/likes`
-- `DELETE /api/users/[userIdx]/likes/[itemIdx]`
-
-## Repository Layout
-
-- `src/` — SvelteKit app routes, UI components, and server logic
-- `src/lib/db/` — Drizzle schema + server-only DB client
-- `src/lib/server/` — recommendation, onboarding, auth, and API helpers
-- `model/` — ML training, dataset preparation, and DB seeding scripts
-- `drizzle/` — Drizzle migrations
-
 ## License
 
-Add a license file (for example MIT or Apache-2.0) and update this section once you’re ready to publish.
+This project is licensed under the MIT License. See `LICENSE` for details.
 
