@@ -11,6 +11,7 @@ Pass --reset to truncate all tables before inserting.
 from __future__ import annotations
 
 import argparse
+import io
 import os
 import sys
 import time
@@ -200,30 +201,46 @@ def main() -> None:
     # ------------------------------------------------------------------
     print("Seeding train_edges…")
     t0 = time.time()
-    if "plays" in train_df.columns:
-        edge_rows = list(
-            train_df[["user_idx", "item_idx", "plays"]].itertuples(index=False, name=None)
-        )
-        edge_template = "(%s, %s, %s)"
-        edge_cols = "(user_idx, item_idx, plays)"
+    # COPY -> temp table -> one upsert is much faster than many execute_values calls.
+    cur.execute("""
+        CREATE TEMP TABLE _seed_train_edges (
+            user_idx INTEGER NOT NULL,
+            item_idx INTEGER NOT NULL,
+            plays INTEGER NOT NULL
+        ) ON COMMIT DROP
+    """)
+
+    has_plays = "plays" in train_df.columns
+    buf = io.StringIO()
+    if has_plays:
+        for user_idx, item_idx, plays in train_df[["user_idx", "item_idx", "plays"]].itertuples(
+            index=False,
+            name=None,
+        ):
+            buf.write(f"{int(user_idx)},{int(item_idx)},{int(plays)}\n")
     else:
-        edge_rows = [
-            (*t, 1) for t in train_df[["user_idx", "item_idx"]].itertuples(index=False, name=None)
-        ]
-        edge_template = "(%s, %s, %s)"
-        edge_cols = "(user_idx, item_idx, plays)"
-    EDGE_BATCH = 2000
-    for i in range(0, len(edge_rows), EDGE_BATCH):
-        psycopg2.extras.execute_values(
-            cur,
-            f"""
-            INSERT INTO train_edges {edge_cols}
-            VALUES %s
-            ON CONFLICT (user_idx, item_idx) DO UPDATE SET plays = EXCLUDED.plays
-            """,
-            edge_rows[i : i + EDGE_BATCH],
-            template=edge_template,
-        )
+        for user_idx, item_idx in train_df[["user_idx", "item_idx"]].itertuples(
+            index=False,
+            name=None,
+        ):
+            buf.write(f"{int(user_idx)},{int(item_idx)},1\n")
+
+    buf.seek(0)
+    cur.copy_expert(
+        """
+        COPY _seed_train_edges (user_idx, item_idx, plays)
+        FROM STDIN
+        WITH (FORMAT csv)
+        """,
+        buf,
+    )
+    cur.execute("""
+        INSERT INTO train_edges (user_idx, item_idx, plays)
+        SELECT user_idx, item_idx, plays
+        FROM _seed_train_edges
+        ON CONFLICT (user_idx, item_idx) DO UPDATE
+        SET plays = EXCLUDED.plays
+    """)
     conn.commit()
     print(f"  done in {time.time()-t0:.1f}s")
 
